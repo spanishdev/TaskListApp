@@ -1,7 +1,7 @@
 package com.spanishdev.tasklistapp.domain.repository
 
-import com.spanishdev.tasklistapp.domain.model.Status
-import com.spanishdev.tasklistapp.domain.model.Task
+import com.spanishdev.tasklistapp.domain.entities.Status
+import com.spanishdev.tasklistapp.domain.entities.Task
 
 class DebugTaskRepositoryImpl : TaskRepository {
 

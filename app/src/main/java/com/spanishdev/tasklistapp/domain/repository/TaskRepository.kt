@@ -1,6 +1,6 @@
 package com.spanishdev.tasklistapp.domain.repository
 
-import com.spanishdev.tasklistapp.domain.model.Task
+import com.spanishdev.tasklistapp.domain.entities.Task
 
 interface TaskRepository {
     suspend fun addTask(task: Task)
