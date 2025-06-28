@@ -9,8 +9,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -21,15 +25,38 @@ import com.spanishdev.tasklistapp.domain.entities.Status
 import com.spanishdev.tasklistapp.domain.entities.Task
 import com.spanishdev.tasklistapp.ui.viewmodel.TaskListViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskListScreen(viewModel: TaskListViewModel) {
+fun TaskListScreen(
+    viewModel: TaskListViewModel,
+    modifier: Modifier = Modifier
+) {
     val uiState = viewModel.state.collectAsState()
+    val isRefreshing = uiState.value is TaskListViewModel.State.Loading
 
-    when(val state = uiState.value) {
-        is TaskListViewModel.State.Empty -> EmptyView()
-        is TaskListViewModel.State.Error -> ErrorView(state.message)
-        is TaskListViewModel.State.Loading -> LoadingView()
-        is TaskListViewModel.State.Success -> TaskListView(state.tasks)
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = { viewModel.fetchTasks() },
+        state = pullToRefreshState,
+        modifier = modifier,
+        indicator = {
+            Indicator(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isRefreshing = isRefreshing,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                state = pullToRefreshState
+            )
+        },
+    ) {
+        when (val state = uiState.value) {
+            is TaskListViewModel.State.Empty -> EmptyView()
+            is TaskListViewModel.State.Error -> ErrorView(state.message)
+            is TaskListViewModel.State.Loading -> LoadingView()
+            is TaskListViewModel.State.Success -> TaskListView(state.tasks)
+        }
     }
 }
 
@@ -102,7 +129,7 @@ fun PreviewLoading() {
 @Preview
 @Composable
 fun PreviewEmpty() {
-   EmptyView()
+    EmptyView()
 }
 
 @Preview
