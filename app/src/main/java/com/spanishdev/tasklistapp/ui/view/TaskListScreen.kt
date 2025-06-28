@@ -17,6 +17,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,14 +32,15 @@ fun TaskListScreen(
     viewModel: TaskListViewModel,
     modifier: Modifier = Modifier
 ) {
-    val uiState = viewModel.state.collectAsState()
-    val isRefreshing = uiState.value is TaskListViewModel.State.Loading
+    val uiState by viewModel.state.collectAsState()
+    val isRefreshingState by viewModel.isRefreshingState.collectAsState()
+    val isRefreshing = isRefreshingState
 
     val pullToRefreshState = rememberPullToRefreshState()
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
-        onRefresh = { viewModel.fetchTasks() },
+        onRefresh = { viewModel.refreshTasks() },
         state = pullToRefreshState,
         modifier = modifier,
         indicator = {
@@ -51,19 +53,19 @@ fun TaskListScreen(
             )
         },
     ) {
-        when (val state = uiState.value) {
+        when (val state = uiState) {
             is TaskListViewModel.State.Empty -> EmptyView()
             is TaskListViewModel.State.Error -> ErrorView(state.message)
             is TaskListViewModel.State.Loading -> LoadingView()
-            is TaskListViewModel.State.Success -> TaskListView(state.tasks)
+            is TaskListViewModel.State.Success -> TaskListView(tasks = state.tasks)
         }
     }
 }
 
 @Composable
-fun LoadingView() {
+fun LoadingView(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()
@@ -71,9 +73,9 @@ fun LoadingView() {
 }
 
 @Composable
-fun EmptyView() {
+fun EmptyView(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -84,9 +86,12 @@ fun EmptyView() {
 }
 
 @Composable
-fun ErrorView(message: String) {
+fun ErrorView(
+    message: String,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -99,9 +104,12 @@ fun ErrorView(message: String) {
 
 
 @Composable
-fun TaskListView(tasks: List<Task>) {
+fun TaskListView(
+    tasks: List<Task>,
+    modifier: Modifier = Modifier
+) {
     LazyColumn(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
     ) {
