@@ -132,7 +132,7 @@ fun ErrorView(
 
 
 @Composable
-fun TaskListView(task: com.spanishdev.tasklistapp.domain.model.Task) {
+fun TaskListView(task: Task) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -168,23 +168,23 @@ fun PreviewError() {
 @Composable
 fun PreviewTaskList() {
     val tasks = listOf(
-        com.spanishdev.tasklistapp.domain.model.Task(
+        Task(
             id = 1,
             name = "Task 1",
             description = "A done task",
-            com.spanishdev.tasklistapp.domain.model.Status.Done
+            Status.Done
         ),
-        com.spanishdev.tasklistapp.domain.model.Task(
+        Task(
             id = 2,
             name = "Task 2",
             description = "A pending task",
-            com.spanishdev.tasklistapp.domain.model.Status.Pending
+            Status.Pending
         ),
-        com.spanishdev.tasklistapp.domain.model.Task(
+        Task(
             id = 3,
             name = "Task 3",
             description = "A in progress task",
-            com.spanishdev.tasklistapp.domain.model.Status.InProgress
+            Status.InProgress
         ),
     )
     TaskListView(tasks[0])

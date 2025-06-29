@@ -5,7 +5,6 @@ import com.spanishdev.tasklistapp.database.entities.TaskEntity
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 
 class TaskRepositoryImpl(private val taskDao: TaskDao) : TaskRepository {
