@@ -1,4 +1,4 @@
-package com.spanishdev.tasklistapp.domain.entities
+package com.spanishdev.tasklistapp.domain.model
 
 data class Task(
     val id: Long,

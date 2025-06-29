@@ -22,8 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.spanishdev.tasklistapp.domain.entities.Status
-import com.spanishdev.tasklistapp.domain.entities.Task
+import com.spanishdev.tasklistapp.domain.model.Status
+import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.ui.viewmodel.TaskListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
