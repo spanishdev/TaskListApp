@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -71,6 +72,7 @@ class GetTasksUseCaseTest {
 
         try {
             useCase()
+            fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
             assertEquals(expectedException.message, e.message)
         }
