@@ -21,7 +21,8 @@ interface TaskDao {
     @Query("SELECT * FROM tasks ORDER BY name ASC")
     fun getAllTasksByName(): Flow<List<TaskEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM tasks 
         ORDER BY
                  CASE status
@@ -32,7 +33,8 @@ interface TaskDao {
                     ELSE 5
                 END ASC, 
                 createdAt DESC
-    """)
+    """
+    )
     fun getAllTasksByStatus(): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM tasks WHERE id = :id")
@@ -42,10 +44,10 @@ interface TaskDao {
     suspend fun insertTask(taskEntity: TaskEntity): Long
 
     @Update
-    suspend fun updateTask(taskEntity: TaskEntity)
+    suspend fun updateTask(taskEntity: TaskEntity): Int
 
     @Delete
-    suspend fun deleteTask(taskEntity: TaskEntity)
+    suspend fun deleteTask(taskEntity: TaskEntity): Int
 
     @Query("DELETE FROM tasks")
     suspend fun deleteAllTasks()
