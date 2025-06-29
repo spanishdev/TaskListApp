@@ -7,10 +7,10 @@ import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.first
 
-class TaskRepositoryImpl(val taskDao: TaskDao): TaskRepository {
-    override suspend fun addTask(task: Task) {
+class TaskRepositoryImpl(private val taskDao: TaskDao): TaskRepository {
+
+    override suspend fun addTask(task: Task): Long =
         taskDao.insertTask(task.toEntity())
-    }
 
     override suspend fun deleteTask(task: Task) {
         taskDao.deleteTask(task.toEntity())
