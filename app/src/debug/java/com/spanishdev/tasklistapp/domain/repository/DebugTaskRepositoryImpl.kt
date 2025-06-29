@@ -1,7 +1,7 @@
 package com.spanishdev.tasklistapp.domain.repository
 
-import com.spanishdev.tasklistapp.domain.entities.Status
-import com.spanishdev.tasklistapp.domain.entities.Task
+import com.spanishdev.tasklistapp.domain.model.Status
+import com.spanishdev.tasklistapp.domain.model.Task
 
 class DebugTaskRepositoryImpl : TaskRepository {
 
@@ -26,18 +26,22 @@ class DebugTaskRepositoryImpl : TaskRepository {
         )
     )
 
-    override suspend fun addTask(task: Task) {
+    override suspend fun addTask(task: Task): Long {
         taskList.add(task)
+        return task.id
     }
 
-    override suspend fun deleteTask(task: Task) {
-        taskList.remove(task)
+    override suspend fun deleteTask(task: Task): Boolean {
+        return taskList.remove(task)
     }
 
-    override suspend fun updateTask(task: Task) {
+    override suspend fun updateTask(task: Task): Boolean {
         val index = taskList.indexOf(task)
-        if (index >= 0) {
+        return if (index >= 0) {
             taskList[index] = task
+            true
+        } else {
+            false
         }
     }
 

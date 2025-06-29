@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "TaskListApp"
 include(":app")
- 
+include(":database")
+include(":domain")

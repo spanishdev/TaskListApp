@@ -1,6 +1,6 @@
 package com.spanishdev.tasklistapp.domain.usecase
 
-import com.spanishdev.tasklistapp.domain.entities.Task
+import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

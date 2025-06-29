@@ -3,7 +3,7 @@ package com.spanishdev.tasklistapp.ui.viewmodel
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spanishdev.tasklistapp.domain.entities.Task
+import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

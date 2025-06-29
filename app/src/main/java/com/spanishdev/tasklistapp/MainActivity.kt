@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.spanishdev.tasklistapp.domain.repository.DebugTaskRepositoryImpl
+import androidx.room.Room
+import com.spanishdev.tasklistapp.data.TaskRepositoryImpl
+import com.spanishdev.tasklistapp.database.TaskDatabase
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 import com.spanishdev.tasklistapp.ui.theme.TaskListAppTheme
 import com.spanishdev.tasklistapp.ui.view.TaskListScreen
@@ -18,9 +20,21 @@ import com.spanishdev.tasklistapp.ui.viewmodel.TaskListViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
+    private val database by lazy {
+        Room.databaseBuilder(
+            applicationContext,
+            TaskDatabase::class.java,
+            TaskDatabase.DATABASE_NAME
+        ).build()
+    }
+
+    private val repository by lazy {
+        TaskRepositoryImpl(database.taskDao())
+    }
+
     private val viewModel: TaskListViewModel by viewModels {
-        val repository = DebugTaskRepositoryImpl()
-        val dummyGetTasksUseCase = GetTasksUseCase(repository)
+        val dummyGetTasksUseCase =
+            GetTasksUseCase(repository)
         TaskListViewModelFactory(dummyGetTasksUseCase)
     }
 
