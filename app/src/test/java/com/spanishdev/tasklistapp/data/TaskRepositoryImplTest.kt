@@ -4,21 +4,15 @@ import com.spanishdev.tasklistapp.database.dao.TaskDao
 import com.spanishdev.tasklistapp.database.entities.TaskEntity
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
-import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.math.exp
 
 class TaskRepositoryImplTest {
 
