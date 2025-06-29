@@ -41,6 +41,7 @@ android {
 
 dependencies {
     //Modules
+    implementation(project(":domain"))
     implementation(project(":database"))
 
     //Room

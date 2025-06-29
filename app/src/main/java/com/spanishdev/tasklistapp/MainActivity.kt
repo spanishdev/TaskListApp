@@ -33,7 +33,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private val viewModel: TaskListViewModel by viewModels {
-        val dummyGetTasksUseCase = GetTasksUseCase(repository)
+        val dummyGetTasksUseCase =
+            GetTasksUseCase(repository)
         TaskListViewModelFactory(dummyGetTasksUseCase)
     }
 

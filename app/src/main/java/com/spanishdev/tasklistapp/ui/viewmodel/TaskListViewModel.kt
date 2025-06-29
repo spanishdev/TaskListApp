@@ -11,13 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class TaskListViewModel(private val getTasksUseCase: GetTasksUseCase) : ViewModel() {
+class TaskListViewModel(private val getTasksUseCase: com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase) : ViewModel() {
 
     @Immutable
     sealed class State {
         data object Loading : State()
         data object Empty : State()
-        data class Success(val tasks: List<Task>) : State()
+        data class Success(val tasks: List<com.spanishdev.tasklistapp.domain.model.Task>) : State()
         data class Error(val message: String) : State()
     }
 

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 
-class TaskListViewModelFactory(private val getTasksUseCase: GetTasksUseCase) :
+class TaskListViewModelFactory(private val getTasksUseCase: com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase) :
     ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
