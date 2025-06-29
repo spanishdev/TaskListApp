@@ -19,7 +19,7 @@ import org.junit.Test
 class DeleteTaskUseCaseTest {
 
     @Test
-    fun `WHEN deletetask success THEN returns true`() = runTest {
+    fun `WHEN Delete Task success THEN returns true`() = runTest {
         val repository = mockk<TaskRepository>()
         val useCase = DeleteTaskUseCase(repository, UnconfinedTestDispatcher())
         val taskToDelete = Task(45L, "Name", "Description", Status.Pending)
@@ -33,7 +33,7 @@ class DeleteTaskUseCaseTest {
     }
 
     @Test
-    fun `WHEN deletetask fail THEN returns false`() = runTest {
+    fun `WHEN Delete Task fail THEN returns false`() = runTest {
         val repository = mockk<TaskRepository>()
         val useCase = DeleteTaskUseCase(repository, UnconfinedTestDispatcher())
         val taskToDelete = Task(45L, "Name", "Description", Status.Pending)
