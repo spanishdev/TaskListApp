@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.room.Room
 import com.spanishdev.tasklistapp.data.TaskRepositoryImpl
 import com.spanishdev.tasklistapp.database.TaskDatabase
+import com.spanishdev.tasklistapp.domain.repository.DebugTaskRepositoryImpl
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 import com.spanishdev.tasklistapp.ui.theme.TaskListAppTheme
 import com.spanishdev.tasklistapp.ui.view.TaskListScreen
@@ -29,7 +30,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private val repository by lazy {
-        TaskRepositoryImpl(database.taskDao())
+       // TaskRepositoryImpl(database.taskDao())
+        DebugTaskRepositoryImpl()
     }
 
     private val viewModel: TaskListViewModel by viewModels {

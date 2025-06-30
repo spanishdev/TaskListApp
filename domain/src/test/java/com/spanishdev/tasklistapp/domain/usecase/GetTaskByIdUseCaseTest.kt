@@ -37,7 +37,8 @@ class GetTaskByIdUseCaseTest {
             id = 1,
             name = "Test task 1",
             description = "Description 1",
-            status = Status.Pending
+            status = Status.Pending,
+            createdAt = DEFAULT_DATE
         )
         coEvery { repository.getTaskById(DEFAULT_ID) } returns expectedTask
 
@@ -67,5 +68,6 @@ class GetTaskByIdUseCaseTest {
 
     companion object {
         const val DEFAULT_ID = 1L
+        const val DEFAULT_DATE = "12-06-2025 14:23"
     }
 }

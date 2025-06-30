@@ -1,13 +1,16 @@
 package com.spanishdev.tasklistapp.ui.view
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +23,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.spanishdev.tasklistapp.domain.model.Status
@@ -133,15 +138,51 @@ fun ErrorView(
 
 @Composable
 fun TaskListView(task: Task) {
+    val statusColor = when (task.status) {
+        Status.Pending -> Color.Gray.copy(alpha = 0.1f)
+        Status.InProgress -> Color.Blue.copy(alpha = 0.1f)
+        Status.Done -> Color.Green.copy(alpha = 0.1f)
+        Status.Cancelled -> Color.Red.copy(alpha = 0.1f)
+    }
+
     Card(
+        colors = CardDefaults.cardColors(
+            containerColor = statusColor
+        ),
         modifier = Modifier
             .fillMaxWidth()
+            .height(120.dp)
             .padding(vertical = 4.dp)
     ) {
-        Text(
-            text = "${task.name}: ${task.description}",
-            modifier = Modifier.padding(16.dp)
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        ) {
+            Text(
+                text = task.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Text(
+                text = task.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+
+            Text(
+                text = task.createdAt,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            )
+        }
+
     }
 }
 
@@ -166,27 +207,32 @@ fun PreviewError() {
 
 @Preview
 @Composable
-fun PreviewTaskList() {
+fun PreviewContent() {
     val tasks = listOf(
         Task(
             id = 1,
             name = "Task 1",
             description = "A done task",
-            Status.Done
+            status = Status.Done,
+            createdAt = "11-06-2025 13:00"
         ),
         Task(
             id = 2,
             name = "Task 2",
             description = "A pending task",
-            Status.Pending
+            status = Status.Pending,
+            createdAt = "20-06-2025 18:00"
         ),
         Task(
             id = 3,
             name = "Task 3",
             description = "A in progress task",
-            Status.InProgress
+            status = Status.InProgress,
+            createdAt = "19-06-2025 22:00"
         ),
     )
-    TaskListView(tasks[0])
+    val state = TaskListViewModel.State.Success(tasks)
+    Content(state)
 }
+
 

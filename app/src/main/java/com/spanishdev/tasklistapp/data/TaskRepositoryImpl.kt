@@ -7,53 +7,27 @@ import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.firstOrNull
 
-class TaskRepositoryImpl(private val taskDao: TaskDao) : TaskRepository {
+class TaskRepositoryImpl(
+    private val taskDao: TaskDao,
+    private val taskMapper: TaskMapper,
+) : TaskRepository {
 
     override suspend fun addTask(task: Task): Long =
-        taskDao.insertTask(task.toEntity())
+        taskDao.insertTask(taskMapper.toEntity(task))
 
     override suspend fun deleteTask(task: Task): Boolean {
-        val rowsAffected = taskDao.deleteTask(task.toEntity())
+        val rowsAffected = taskDao.deleteTask(taskMapper.toEntity(task))
         return rowsAffected > 0
     }
 
     override suspend fun updateTask(task: Task): Boolean {
-        val rowsAffected = taskDao.updateTask(task.toEntity())
+        val rowsAffected = taskDao.updateTask(taskMapper.toEntity(task))
         return rowsAffected > 0
     }
 
     override suspend fun getTasks(): List<Task> =
-        taskDao.getAllTasks().firstOrNull()?.map { it.toDomain() } ?: emptyList()
+        taskDao.getAllTasks().firstOrNull()?.mapNotNull(taskMapper::toDomain) ?: emptyList()
 
     override suspend fun getTaskById(id: Long): Task? =
-        taskDao.getTaskById(id)?.toDomain()
-}
-
-private fun Task.toEntity() = TaskEntity(
-    id = id,
-    name = name,
-    description = description,
-    status = status.toDbFormat(),
-)
-
-private fun TaskEntity.toDomain() = Task(
-    id = id,
-    name = name,
-    description = description,
-    status = status.toDomain(),
-)
-
-private fun Status.toDbFormat() = when (this) {
-    Status.Pending -> "PENDING"
-    Status.InProgress -> "IN_PROGRESS"
-    Status.Done -> "DONE"
-    Status.Cancelled -> "CANCELLED"
-}
-
-private fun String.toDomain() = when (this) {
-    "PENDING" -> Status.Pending
-    "IN_PROGRESS" -> Status.InProgress
-    "DONE" -> Status.Done
-    "CANCELLED" -> Status.Cancelled
-    else -> Status.Pending
+        taskMapper.toDomain(taskDao.getTaskById(id))
 }

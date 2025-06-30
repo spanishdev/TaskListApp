@@ -22,7 +22,7 @@ class UpdateTaskUseCaseTest {
     fun `WHEN Update Task success THEN returns true`() = runTest {
         val repository = mockk<TaskRepository>()
         val useCase = UpdateTaskUseCase(repository, UnconfinedTestDispatcher())
-        val taskToDelete = Task(45L, "Name", "Description", Status.Pending)
+        val taskToDelete = Task(45L, "Name", "Description", Status.Pending, DEFAULT_DATE)
 
         coEvery { repository.updateTask(any()) } returns true
 
@@ -36,7 +36,7 @@ class UpdateTaskUseCaseTest {
     fun `WHEN Update Task fail THEN returns false`() = runTest {
         val repository = mockk<TaskRepository>()
         val useCase = UpdateTaskUseCase(repository, UnconfinedTestDispatcher())
-        val taskToDelete = Task(45L, "Name", "Description", Status.Pending)
+        val taskToDelete = Task(45L, "Name", "Description", Status.Pending, DEFAULT_DATE)
 
         coEvery { repository.updateTask(any()) } returns false
 
@@ -51,7 +51,7 @@ class UpdateTaskUseCaseTest {
         val repository = mockk<TaskRepository>()
         val useCase = UpdateTaskUseCase(repository, UnconfinedTestDispatcher())
         val expectedException = RuntimeException("Database error")
-        val taskToDelete = Task(45L, "Name", "Description", Status.Pending)
+        val taskToDelete = Task(45L, "Name", "Description", Status.Pending, DEFAULT_DATE)
 
         coEvery { repository.updateTask(any()) } throws expectedException
 
@@ -63,5 +63,9 @@ class UpdateTaskUseCaseTest {
         }
 
         coVerify { repository.updateTask(any()) }
+    }
+
+    companion object {
+        const val DEFAULT_DATE = "12-06-2025 14:23"
     }
 }
