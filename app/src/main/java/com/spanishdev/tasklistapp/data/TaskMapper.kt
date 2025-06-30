@@ -8,12 +8,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class TaskMapper(
-    private val dataFormatter: DateFormat = SimpleDateFormat(
-        "dd-MM-yyyy HH:mm",
-        Locale.getDefault()
-    )
-) {
+class TaskMapper(private val dateFormat: DateFormat) {
 
     fun toEntity(task: Task): TaskEntity = TaskEntity(
         id = task.id,
@@ -49,12 +44,12 @@ class TaskMapper(
     }
 
     private fun Long.formatDate(): String {
-        return dataFormatter.format(Date(this))
+        return dateFormat.format(Date(this))
     }
 
     private fun String.parseDate(): Long {
         return try {
-            dataFormatter.parse(this)?.time ?: System.currentTimeMillis()
+            dateFormat.parse(this)?.time ?: System.currentTimeMillis()
         } catch (e: Exception) {
             // Fallback
             System.currentTimeMillis()
