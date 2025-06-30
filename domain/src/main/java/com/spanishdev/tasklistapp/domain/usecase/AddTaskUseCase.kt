@@ -10,8 +10,9 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 
-class AddTaskUseCase(
+class AddTaskUseCase @Inject constructor(
     private val repository: TaskRepository,
     private val dataFormatter: DateFormat = SimpleDateFormat(
         "dd-MM-yyyy HH:mm",
