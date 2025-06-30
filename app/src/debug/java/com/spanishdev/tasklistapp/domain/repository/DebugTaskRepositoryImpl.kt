@@ -11,18 +11,21 @@ class DebugTaskRepositoryImpl : TaskRepository {
             name = "Buy milk",
             description = "Go to supermarket and pickup 2 bottles",
             status = Status.InProgress,
+            createdAt = "22-06-2025 18:00"
         ),
         Task(
             id = 2L,
             name = "Do chores",
             description = "Wash clothes and sweep the floor",
             status = Status.Pending,
+            createdAt = "19-06-2025 11:00"
         ),
         Task(
             id = 3L,
             name = "Prepare lunch",
             description = "Cook some nice rice",
             status = Status.Pending,
+            createdAt = "14-06-2025 12:00"
         )
     )
 

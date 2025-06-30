@@ -38,19 +38,22 @@ class GetTasksUseCaseTest {
                 id = 1,
                 name = "Test task 1",
                 description = "Description 1",
-                status = Status.Pending
+                status = Status.Pending,
+                createdAt = DEFAULT_DATE
             ),
             Task(
                 id = 2,
                 name = "Test task 2",
                 description = "Description 2",
-                status = Status.InProgress
+                status = Status.InProgress,
+                createdAt = DEFAULT_DATE
             ),
             Task(
                 id = 3,
                 name = "Test task 3",
                 description = "Description 3",
-                status = Status.Done
+                status = Status.Done,
+                createdAt = DEFAULT_DATE
             ),
         )
 
@@ -78,5 +81,9 @@ class GetTasksUseCaseTest {
         }
 
         coVerify { repository.getTasks() }
+    }
+
+    companion object {
+        const val DEFAULT_DATE = "12-06-2025 14:23"
     }
 }

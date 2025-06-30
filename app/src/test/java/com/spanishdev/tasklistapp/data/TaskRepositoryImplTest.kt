@@ -13,11 +13,16 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TaskRepositoryImplTest {
 
     private val taskDao: TaskDao = mockk()
-    private val taskRepository = TaskRepositoryImpl(taskDao)
+    private val taskMapper = TaskMapper()
+    private val taskRepository = TaskRepositoryImpl(taskDao, taskMapper)
+    private val formatter = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
 
     @Test
     fun `WHEN add task THEN inserts Task Entity`() = runTest {
@@ -25,7 +30,8 @@ class TaskRepositoryImplTest {
             id = 1L,
             name = "Name",
             description = "Description",
-            status = Status.InProgress
+            status = Status.InProgress,
+            createdAt = "12-06-2025 13:00"
         )
 
         coEvery { taskDao.insertTask(any()) } returns 1L
@@ -50,7 +56,8 @@ class TaskRepositoryImplTest {
             id = 1L,
             name = "Name",
             description = "Description",
-            status = Status.InProgress
+            status = Status.InProgress,
+            createdAt = "12-06-2025 13:00"
         )
 
         coEvery { taskDao.deleteTask(any()) } returns 1
@@ -76,7 +83,8 @@ class TaskRepositoryImplTest {
             id = 1L,
             name = "Name",
             description = "Description",
-            status = Status.InProgress
+            status = Status.InProgress,
+            createdAt = "12-06-2025 13:00"
         )
 
         coEvery { taskDao.deleteTask(any()) } returns 0
@@ -102,7 +110,8 @@ class TaskRepositoryImplTest {
             id = 1L,
             name = "Name",
             description = "Description",
-            status = Status.InProgress
+            status = Status.InProgress,
+            createdAt = "12-06-2025 13:00"
         )
 
         coEvery { taskDao.updateTask(any()) } returns 1
@@ -128,7 +137,8 @@ class TaskRepositoryImplTest {
             id = 1L,
             name = "Name",
             description = "Description",
-            status = Status.InProgress
+            status = Status.InProgress,
+            createdAt = "12-06-2025 13:00"
         )
 
         coEvery { taskDao.updateTask(any()) } returns 0
@@ -156,14 +166,14 @@ class TaskRepositoryImplTest {
                 name = "Task 1",
                 description = "Description 1",
                 status = "IN_PROGRESS",
-                createdAt = 1234L
+                createdAt = 1719752400000L
             ),
             TaskEntity(
                 id = 2L,
                 name = "Task 2",
                 description = "Description 2",
                 status = "DONE",
-                createdAt = 567L
+                createdAt = 1719756000000L
             ),
         )
 
@@ -176,13 +186,15 @@ class TaskRepositoryImplTest {
                 id = 1L,
                 name = "Task 1",
                 description = "Description 1",
-                status = Status.InProgress
+                status = Status.InProgress,
+                createdAt = formatter.format(Date(1719752400000L))
             ),
             Task(
                 id = 2L,
                 name = "Task 2",
                 description = "Description 2",
-                status = Status.Done
+                status = Status.Done,
+                createdAt = formatter.format(Date(1719756000000L))
             ),
         )
 
@@ -200,7 +212,7 @@ class TaskRepositoryImplTest {
             name = "Task 1",
             description = "Description 1",
             status = "IN_PROGRESS",
-            createdAt = 1234L
+            createdAt = 1719756000000L
         )
 
         coEvery { taskDao.getTaskById(1L) } returns taskEntity
@@ -212,6 +224,7 @@ class TaskRepositoryImplTest {
             name = "Task 1",
             description = "Description 1",
             status = Status.InProgress,
+            createdAt = formatter.format(1719756000000L)
         )
 
         assertTrue(task == expected)

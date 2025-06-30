@@ -10,5 +10,5 @@ data class TaskEntity(
     val name: String,
     val description: String,
     val status: String,
-    val createdAt: Long = System.currentTimeMillis(),
+    val createdAt: Long,
 )

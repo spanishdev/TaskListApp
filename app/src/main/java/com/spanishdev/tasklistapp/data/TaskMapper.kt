@@ -8,20 +8,19 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class TaskMapper {
-
-    private val dataFormatter: DateFormat by lazy {
-        SimpleDateFormat(
-            "dd-MM-yyyy HH:mm",
-            Locale.getDefault()
-        )
-    }
+class TaskMapper(
+    private val dataFormatter: DateFormat = SimpleDateFormat(
+        "dd-MM-yyyy HH:mm",
+        Locale.getDefault()
+    )
+) {
 
     fun toEntity(task: Task): TaskEntity = TaskEntity(
         id = task.id,
         name = task.name,
         description = task.description,
         status = task.status.toDbFormat(),
+        createdAt = task.createdAt.parseDate()
     )
 
     fun toDomain(taskEntity: TaskEntity?): Task? = taskEntity?.let { entity ->
@@ -30,7 +29,7 @@ class TaskMapper {
             name = entity.name,
             description = entity.description,
             status = entity.status.toDomain(),
-            createdAt = entity.createdAt.toReadableFormat()
+            createdAt = entity.createdAt.formatDate()
         )
     }
 
@@ -49,7 +48,16 @@ class TaskMapper {
         else -> Status.Pending
     }
 
-    private fun Long.toReadableFormat(): String {
+    private fun Long.formatDate(): String {
         return dataFormatter.format(Date(this))
+    }
+
+    private fun String.parseDate(): Long {
+        return try {
+            dataFormatter.parse(this)?.time ?: System.currentTimeMillis()
+        } catch (e: Exception) {
+            // Fallback
+            System.currentTimeMillis()
+        }
     }
 }
