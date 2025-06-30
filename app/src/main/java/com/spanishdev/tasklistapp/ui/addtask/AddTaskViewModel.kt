@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spanishdev.tasklistapp.R
+import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,10 +28,20 @@ class AddTaskViewModel @Inject constructor(
         val error: String? = null,
     )
 
+    sealed class Event {
+        data class AddTask(val name: String, val description: String): Event()
+        data object GoBack: Event()
+    }
+
     private val _uiState = MutableStateFlow(State())
     val state: StateFlow<State> = _uiState.asStateFlow()
 
-    fun addTask(name: String, description: String) {
+    fun sendEvent(event: Event) = when(event) {
+        is Event.AddTask -> addTask(event.name, event.description)
+        is Event.GoBack -> { TODO() }
+    }
+
+    private fun addTask(name: String, description: String) {
         viewModelScope.launch {
             if (_uiState.value.isLoading) return@launch
 
@@ -38,11 +49,16 @@ class AddTaskViewModel @Inject constructor(
 
             try {
                 val newTask = addTaskUseCase(name, description)
+                finishAndReturn(newTask)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message ?: "Unknown error")
             } finally {
                 _uiState.value = _uiState.value.copy(isLoading = false)
             }
         }
+    }
+
+    private fun finishAndReturn(task: Task) {
+
     }
 }

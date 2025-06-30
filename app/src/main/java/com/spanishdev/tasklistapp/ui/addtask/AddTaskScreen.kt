@@ -1,10 +1,20 @@
 package com.spanishdev.tasklistapp.ui.addtask
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -13,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel.Event
 
 @Composable
 fun AddTaskScreen(
@@ -22,7 +33,7 @@ fun AddTaskScreen(
     val state by viewModel.state.collectAsState()
     Content(
         state = state,
-        addTaskCallback = { name, description -> viewModel.addTask(name, description) },
+        sendEvent = { event -> viewModel.sendEvent(event)},
         modifier = modifier
     )
 }
@@ -30,7 +41,7 @@ fun AddTaskScreen(
 @Composable
 private fun Content(
     state: AddTaskViewModel.State,
-    addTaskCallback: (String, String) -> Unit,
+    sendEvent: (Event) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -70,7 +81,7 @@ private fun Content(
             keyboardActions = KeyboardActions(
                 onDone = {
                     keyboardController?.hide()
-                    addTaskCallback(name, description)
+                    sendEvent(Event.AddTask(name, description))
                 }
             ),
             isError = false,
@@ -87,7 +98,7 @@ private fun Content(
 fun PreviewAddTask() {
     Content(
         state = AddTaskViewModel.State(),
-        addTaskCallback = { _,_ -> },
+        sendEvent = {}
     )
 }
 
