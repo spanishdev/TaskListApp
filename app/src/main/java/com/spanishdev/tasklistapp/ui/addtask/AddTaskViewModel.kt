@@ -19,36 +19,55 @@ class AddTaskViewModel @Inject constructor(
 ) : ViewModel() {
 
     data class State(
-        @StringRes val nameLabel: Int = R.string.add_task_name_label,
-        @StringRes val nameHint: Int = R.string.add_task_name_hint,
-        @StringRes val descriptionLabel: Int = R.string.add_task_description_label,
-        @StringRes val descriptionHint: Int = R.string.add_task_description_hint,
-        @StringRes val buttonText: Int = R.string.add_task_button,
+        val resources: Resources = Resources(),
+        val name: String = "",
+        val description: String = "",
         val isLoading: Boolean = false,
         val error: String? = null,
-    )
+    ) {
+        data class Resources(
+            @StringRes val navbarTitle: Int = R.string.add_task_title,
+            @StringRes val nameLabel: Int = R.string.add_task_name_label,
+            @StringRes val nameHint: Int = R.string.add_task_name_hint,
+            @StringRes val descriptionLabel: Int = R.string.add_task_description_label,
+            @StringRes val descriptionHint: Int = R.string.add_task_description_hint,
+            @StringRes val buttonText: Int = R.string.add_task_button,
+        )
+    }
 
     sealed class Event {
-        data class AddTask(val name: String, val description: String): Event()
-        data object GoBack: Event()
+        data class NameChanged(val text: String) : Event()
+        data class DescriptionChanged(val text: String) : Event()
+        data object CreateTask : Event()
+        data object GoBack : Event()
     }
 
     private val _uiState = MutableStateFlow(State())
     val state: StateFlow<State> = _uiState.asStateFlow()
 
-    fun sendEvent(event: Event) = when(event) {
-        is Event.AddTask -> addTask(event.name, event.description)
-        is Event.GoBack -> { TODO() }
+    fun sendEvent(event: Event) = when (event) {
+        is Event.CreateTask -> addTask()
+        is Event.GoBack -> {
+            TODO()
+        }
+
+        is Event.DescriptionChanged -> {
+            _uiState.value = _uiState.value.copy(description = event.text)
+        }
+
+        is Event.NameChanged -> {
+            _uiState.value = _uiState.value.copy(name = event.text)
+        }
     }
 
-    private fun addTask(name: String, description: String) {
+    private fun addTask() {
         viewModelScope.launch {
             if (_uiState.value.isLoading) return@launch
 
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             try {
-                val newTask = addTaskUseCase(name, description)
+                val newTask = addTaskUseCase(state.value.name, state.value.description)
                 finishAndReturn(newTask)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message ?: "Unknown error")
