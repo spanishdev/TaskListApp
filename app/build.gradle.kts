@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+hilt {
+    enableAggregatingTask = false
+}
+
 android {
     namespace = "com.spanishdev.tasklistapp"
     compileSdk = 36
