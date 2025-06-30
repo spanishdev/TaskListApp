@@ -7,8 +7,9 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 
-class TaskMapper(private val dateFormat: DateFormat) {
+class TaskMapper @Inject constructor(private val dateFormat: DateFormat) {
 
     fun toEntity(task: Task): TaskEntity = TaskEntity(
         id = task.id,
