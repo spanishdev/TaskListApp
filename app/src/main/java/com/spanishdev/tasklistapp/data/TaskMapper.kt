@@ -4,16 +4,10 @@ import com.spanishdev.tasklistapp.database.entities.TaskEntity
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
 import java.text.DateFormat
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
+import javax.inject.Inject
 
-class TaskMapper(
-    private val dataFormatter: DateFormat = SimpleDateFormat(
-        "dd-MM-yyyy HH:mm",
-        Locale.getDefault()
-    )
-) {
+class TaskMapper @Inject constructor(private val dateFormat: DateFormat) {
 
     fun toEntity(task: Task): TaskEntity = TaskEntity(
         id = task.id,
@@ -49,12 +43,12 @@ class TaskMapper(
     }
 
     private fun Long.formatDate(): String {
-        return dataFormatter.format(Date(this))
+        return dateFormat.format(Date(this))
     }
 
     private fun String.parseDate(): Long {
         return try {
-            dataFormatter.parse(this)?.time ?: System.currentTimeMillis()
+            dateFormat.parse(this)?.time ?: System.currentTimeMillis()
         } catch (e: Exception) {
             // Fallback
             System.currentTimeMillis()

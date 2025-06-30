@@ -19,10 +19,10 @@ import java.util.Locale
 
 class TaskRepositoryImplTest {
 
-    private val taskDao: TaskDao = mockk()
-    private val taskMapper = TaskMapper()
-    private val taskRepository = TaskRepositoryImpl(taskDao, taskMapper)
     private val formatter = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
+    private val taskDao: TaskDao = mockk()
+    private val taskMapper = TaskMapper(formatter)
+    private val taskRepository = TaskRepositoryImpl(taskDao, taskMapper)
 
     @Test
     fun `WHEN add task THEN inserts Task Entity`() = runTest {
