@@ -207,7 +207,7 @@ fun PreviewError() {
 
 @Preview
 @Composable
-fun PreviewTaskList() {
+fun PreviewContent() {
     val tasks = listOf(
         Task(
             id = 1,
@@ -231,7 +231,8 @@ fun PreviewTaskList() {
             createdAt = "19-06-2025 22:00"
         ),
     )
-    TaskListView(tasks[0])
+    val state = TaskListViewModel.State.Success(tasks)
+    Content(state)
 }
 
 
