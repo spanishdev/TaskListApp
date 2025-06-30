@@ -1,4 +1,4 @@
-package com.spanishdev.tasklistapp.ui.view
+package com.spanishdev.tasklistapp.ui.tasklist
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
-import com.spanishdev.tasklistapp.ui.viewmodel.TaskListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

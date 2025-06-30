@@ -1,4 +1,4 @@
-package com.spanishdev.tasklistapp.ui.theme
+package com.spanishdev.tasklistapp.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

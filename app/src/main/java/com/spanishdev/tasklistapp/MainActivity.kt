@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.spanishdev.tasklistapp.ui.theme.TaskListAppTheme
-import com.spanishdev.tasklistapp.ui.view.TaskListScreen
-import com.spanishdev.tasklistapp.ui.viewmodel.TaskListViewModel
+import com.spanishdev.tasklistapp.theme.TaskListAppTheme
+import com.spanishdev.tasklistapp.ui.tasklist.TaskListScreen
+import com.spanishdev.tasklistapp.ui.tasklist.TaskListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
