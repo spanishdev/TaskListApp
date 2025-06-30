@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">TaskListApp</string>
+    <string name="add_task_name_label">Task name</string>
+    <string name="add_task_name_hint">Buy groceries</string>
+    <string name="add_task_description_label">Task description</string>
+    <string name="add_task_description_hint">Go to supermarket</string>
+    <string name="add_task_button">Create new task</string>
 </resources>
