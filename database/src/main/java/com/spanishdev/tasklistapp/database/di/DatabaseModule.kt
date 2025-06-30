@@ -17,7 +17,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideTaskDatabase(@ApplicationContext context: Context) =
+    fun provideTaskDatabase(@ApplicationContext context: Context): TaskDatabase =
         Room.databaseBuilder(
             context.applicationContext,
             TaskDatabase::class.java,

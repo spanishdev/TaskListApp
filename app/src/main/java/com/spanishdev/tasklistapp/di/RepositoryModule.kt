@@ -3,6 +3,7 @@ package com.spanishdev.tasklistapp.di
 import com.spanishdev.tasklistapp.data.TaskMapper
 import com.spanishdev.tasklistapp.data.TaskRepositoryImpl
 import com.spanishdev.tasklistapp.database.dao.TaskDao
+import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,8 +32,9 @@ class RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideRepository(dao: TaskDao, taskMapper: TaskMapper) = TaskRepositoryImpl(
-        taskDao = dao,
-        taskMapper = taskMapper,
-    )
+    fun provideRepository(dao: TaskDao, taskMapper: TaskMapper): TaskRepository =
+        TaskRepositoryImpl(
+            taskDao = dao,
+            taskMapper = taskMapper,
+        )
 }
