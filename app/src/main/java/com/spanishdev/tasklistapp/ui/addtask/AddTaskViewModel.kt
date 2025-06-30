@@ -7,8 +7,10 @@ import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,21 +21,11 @@ class AddTaskViewModel @Inject constructor(
 ) : ViewModel() {
 
     data class State(
-        val resources: Resources = Resources(),
         val name: String = "",
         val description: String = "",
         val isLoading: Boolean = false,
         val error: String? = null,
-    ) {
-        data class Resources(
-            @StringRes val navbarTitle: Int = R.string.add_task_title,
-            @StringRes val nameLabel: Int = R.string.add_task_name_label,
-            @StringRes val nameHint: Int = R.string.add_task_name_hint,
-            @StringRes val descriptionLabel: Int = R.string.add_task_description_label,
-            @StringRes val descriptionHint: Int = R.string.add_task_description_hint,
-            @StringRes val buttonText: Int = R.string.add_task_button,
-        )
-    }
+    )
 
     sealed class Event {
         data class NameChanged(val text: String) : Event()
@@ -42,8 +34,15 @@ class AddTaskViewModel @Inject constructor(
         data object GoBack : Event()
     }
 
+    sealed class NavigationEvent {
+        data object TaskAddedSuccessfully : NavigationEvent()
+    }
+
     private val _uiState = MutableStateFlow(State())
     val state: StateFlow<State> = _uiState.asStateFlow()
+
+    private val _navigationEvents = MutableSharedFlow<NavigationEvent>()
+    val navigationEvents = _navigationEvents.asSharedFlow()
 
     fun sendEvent(event: Event) = when (event) {
         is Event.CreateTask -> addTask()
@@ -78,6 +77,6 @@ class AddTaskViewModel @Inject constructor(
     }
 
     private fun finishAndReturn(task: Task) {
-
+        _navigationEvents.tryEmit(NavigationEvent.TaskAddedSuccessfully)
     }
 }

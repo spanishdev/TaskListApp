@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -29,24 +30,37 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel.Event
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskScreen(
     viewModel: AddTaskViewModel,
+    onBackNavigation: () -> Unit,
+    onSuccessNavigation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.state.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                AddTaskViewModel.NavigationEvent.TaskAddedSuccessfully -> {
+                    onSuccessNavigation()
+                }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(state.resources.navbarTitle)) },
+                title = { Text(stringResource(R.string.add_task_title)) },
                 navigationIcon = {
-                    IconButton(onClick = { viewModel.sendEvent(Event.GoBack) }) {
+                    IconButton(onClick = { onBackNavigation() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -65,7 +79,6 @@ fun AddTaskScreen(
             )
         }
     ) { paddingValues ->
-
         Content(
             state = state,
             sendEvent = { event -> viewModel.sendEvent(event) },
@@ -94,8 +107,8 @@ private fun Content(
         OutlinedTextField(
             value = state.name,
             onValueChange = { sendEvent(Event.NameChanged(it)) },
-            label = { Text(text = stringResource(state.resources.nameLabel)) },
-            placeholder = { Text(text = stringResource(state.resources.nameHint)) },
+            label = { Text(text = stringResource(R.string.add_task_name_label)) },
+            placeholder = { Text(text = stringResource(R.string.add_task_name_hint)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
@@ -108,8 +121,8 @@ private fun Content(
         OutlinedTextField(
             value = state.description,
             onValueChange = { sendEvent(Event.DescriptionChanged(it)) },
-            label = { Text(text = stringResource(state.resources.descriptionLabel)) },
-            placeholder = { Text(text = stringResource(state.resources.descriptionHint)) },
+            label = { Text(text = stringResource(R.string.add_task_description_label)) },
+            placeholder = { Text(text = stringResource(R.string.add_task_description_hint)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
