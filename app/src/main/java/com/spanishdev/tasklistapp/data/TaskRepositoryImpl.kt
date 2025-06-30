@@ -1,8 +1,6 @@
 package com.spanishdev.tasklistapp.data
 
 import com.spanishdev.tasklistapp.database.dao.TaskDao
-import com.spanishdev.tasklistapp.database.entities.TaskEntity
-import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.firstOrNull

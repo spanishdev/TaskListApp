@@ -4,9 +4,7 @@ import com.spanishdev.tasklistapp.database.entities.TaskEntity
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
 import java.text.DateFormat
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 
 class TaskMapper @Inject constructor(private val dateFormat: DateFormat) {
