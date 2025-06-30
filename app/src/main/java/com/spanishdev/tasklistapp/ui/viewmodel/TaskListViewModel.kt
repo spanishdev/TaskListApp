@@ -5,13 +5,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class TaskListViewModel(private val getTasksUseCase: GetTasksUseCase) : ViewModel() {
+@HiltViewModel
+class TaskListViewModel @Inject constructor(
+    private val getTasksUseCase: GetTasksUseCase
+) : ViewModel() {
 
     @Immutable
     sealed class State {
