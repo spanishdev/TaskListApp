@@ -54,7 +54,7 @@ fun TaskListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.add_task_title)) },
+                title = { Text(stringResource(R.string.app_name)) },
             )
         },
         floatingActionButton = {
