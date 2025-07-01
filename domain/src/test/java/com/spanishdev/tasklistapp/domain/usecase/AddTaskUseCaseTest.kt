@@ -3,6 +3,8 @@ package com.spanishdev.tasklistapp.domain.usecase
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
+import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase.InvalidTaskNameException
+import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase.InvalidTaskDescriptionException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -55,7 +57,7 @@ class AddTaskUseCaseTest {
     }
 
     @Test
-    fun `WHEN blank name THEN throws error`() = runTest {
+    fun `WHEN invalid name THEN throws InvalidTaskNameException`() = runTest {
         val repository = mockk<TaskRepository>()
         val useCase = AddTaskUseCase(repository, dateFormatter, UnconfinedTestDispatcher())
 
@@ -63,9 +65,26 @@ class AddTaskUseCaseTest {
 
         try {
             useCase("", "Description")
-            fail("Expected IllegalArgumentException")
-        } catch (e: IllegalArgumentException) {
+            fail("Expected InvalidTaskNameException")
+        } catch (e: InvalidTaskNameException) {
             assertEquals("Task name cannot be blank", e.message)
+        }
+
+        coVerify(exactly = 0) { repository.addTask(any()) }
+    }
+
+    @Test
+    fun `WHEN invalid description THEN throws InvalidTaskDescriptionException`() = runTest {
+        val repository = mockk<TaskRepository>()
+        val useCase = AddTaskUseCase(repository, dateFormatter, UnconfinedTestDispatcher())
+
+        coEvery { repository.addTask(any()) } returns 45L
+
+        try {
+            useCase("Name", "")
+            fail("Expected InvalidTaskDescriptionException")
+        } catch (e: InvalidTaskDescriptionException) {
+            assertEquals("Task description cannot be blank", e.message)
         }
 
         coVerify(exactly = 0) { repository.addTask(any()) }
