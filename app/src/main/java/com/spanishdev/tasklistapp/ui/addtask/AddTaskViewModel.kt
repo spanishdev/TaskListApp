@@ -38,7 +38,6 @@ class AddTaskViewModel @Inject constructor(
         data class DescriptionChanged(val text: String) : Event()
         data object CreateTask : Event()
         data object ClearError : Event()
-        data object GoBack : Event()
     }
 
     sealed class NavigationEvent {
@@ -54,9 +53,6 @@ class AddTaskViewModel @Inject constructor(
     fun sendEvent(event: Event) = when (event) {
         is Event.CreateTask -> addTask()
         is Event.ClearError -> _uiState.value = _uiState.value.copy(error = null)
-        is Event.GoBack -> {
-            TODO()
-        }
 
         is Event.DescriptionChanged -> {
             _uiState.value = _uiState.value
