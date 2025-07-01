@@ -92,7 +92,12 @@ fun TaskListScreen(
                 )
             },
         ) {
-            Content(uiState)
+            Content(
+                state = uiState,
+                onTaskUpdated = { task ->
+                    viewModel.sendEvent(Event.UpdateTask(task))
+                }
+            )
         }
     }
 }
@@ -100,6 +105,7 @@ fun TaskListScreen(
 @Composable
 fun Content(
     state: TaskListViewModel.State,
+    onTaskUpdated: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -126,8 +132,8 @@ fun Content(
             is TaskListViewModel.State.Success -> items(state.tasks) { task ->
                 TaskItemView(
                     task = task,
-                    onStatusChange = { task, newStatus ->
-                        TODO("Update task status in VM")
+                    onTaskUpdated = { newTask ->
+                        onTaskUpdated(newTask)
                     }
                 )
             }
@@ -179,7 +185,7 @@ fun ErrorView(
 @Composable
 fun TaskItemView(
     task: Task,
-    onStatusChange: (Task, Status) -> Unit,
+    onTaskUpdated: (Task) -> Unit,
 ) {
     val statusColor = when (task.status) {
         Status.Pending -> Color.Gray.copy(alpha = 0.1f)
@@ -234,7 +240,7 @@ fun TaskItemView(
                 StatusChip(
                     status = task.status,
                     onStatusChange = { newStatus ->
-                        onStatusChange(task, newStatus)
+                        onTaskUpdated(task.copy(status = newStatus))
                     }
                 )
             }
@@ -330,7 +336,7 @@ fun PreviewContent() {
         ),
     )
     val state = TaskListViewModel.State.Success(tasks)
-    Content(state)
+    Content(state, {})
 }
 
 

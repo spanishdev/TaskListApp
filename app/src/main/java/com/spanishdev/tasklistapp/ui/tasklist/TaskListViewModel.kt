@@ -21,7 +21,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
-    getTasksUseCase: GetTasksUseCase
+    private val updateTaskUseCase: UpdateTaskUseCase,
+    getTasksUseCase: GetTasksUseCase,
 ) : ViewModel() {
 
     @Immutable
@@ -66,6 +67,12 @@ class TaskListViewModel @Inject constructor(
             _isRefreshingState.value = true
             delay(300)  // Simulatees load
             _isRefreshingState.value = false
+        }
+    }
+
+    private fun updateTask(task: Task) {
+        viewModelScope.launch {
+            updateTaskUseCase(task)
         }
     }
 }
