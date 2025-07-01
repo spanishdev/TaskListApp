@@ -7,6 +7,7 @@ import com.spanishdev.tasklistapp.domain.model.Task
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertFalse
@@ -179,7 +180,7 @@ class TaskRepositoryImplTest {
 
         coEvery { taskDao.getAllTasks() } returns flowOf(taskList)
 
-        val list = taskRepository.getTasks()
+        val list = taskRepository.getTasks().first()
 
         val expected = listOf(
             Task(
