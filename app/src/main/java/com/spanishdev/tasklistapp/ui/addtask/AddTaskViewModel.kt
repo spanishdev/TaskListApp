@@ -57,12 +57,14 @@ class AddTaskViewModel @Inject constructor(
             _uiState.value = _uiState.value
                 .copy(description = event.text)
                 .clearErrorIfType<Error.InvalidDescription>()
+                .clearErrorIfType<Error.GenericError>()
         }
 
         is Event.NameChanged -> {
             _uiState.value = _uiState.value
                 .copy(name = event.text)
                 .clearErrorIfType<Error.InvalidName>()
+                .clearErrorIfType<Error.GenericError>()
         }
     }
 
