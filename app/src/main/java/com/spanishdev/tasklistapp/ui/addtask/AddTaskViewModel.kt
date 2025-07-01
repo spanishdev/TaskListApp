@@ -2,7 +2,6 @@ package com.spanishdev.tasklistapp.ui.addtask
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -74,8 +73,8 @@ class AddTaskViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             try {
-                val newTask = addTaskUseCase(state.value.name, state.value.description)
-                finishAndReturn(newTask)
+                addTaskUseCase(state.value.name, state.value.description)
+                finishAndReturn()
             } catch (e: AddTaskUseCase.InvalidTaskNameException) {
                 _uiState.value = _uiState.value.copy(error = Error.InvalidName(e.message))
             } catch (e: AddTaskUseCase.InvalidTaskDescriptionException) {
@@ -89,7 +88,7 @@ class AddTaskViewModel @Inject constructor(
         }
     }
 
-    private fun finishAndReturn(task: Task) {
+    private fun finishAndReturn() {
         _navigationEvents.tryEmit(NavigationEvent.TaskAddedSuccessfully)
     }
 
