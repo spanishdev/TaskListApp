@@ -2,6 +2,8 @@ package com.spanishdev.tasklistapp.domain.repository
 
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 class DebugTaskRepositoryImpl : TaskRepository {
 
@@ -48,9 +50,7 @@ class DebugTaskRepositoryImpl : TaskRepository {
         }
     }
 
-    override suspend fun getTasks(): List<Task> {
-        return taskList
-    }
+    override fun getTasks(): Flow<List<Task>> = flowOf(taskList)
 
     override suspend fun getTaskById(id: Long): Task? {
         return taskList.find { it.id == id }
