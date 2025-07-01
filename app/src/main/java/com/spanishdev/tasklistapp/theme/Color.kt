@@ -1,4 +1,4 @@
-package com.spanishdev.tasklistapp.ui.theme
+package com.spanishdev.tasklistapp.theme
 
 import androidx.compose.ui.graphics.Color
 

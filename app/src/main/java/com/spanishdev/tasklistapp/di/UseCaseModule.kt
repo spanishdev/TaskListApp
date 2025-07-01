@@ -1,6 +1,7 @@
 package com.spanishdev.tasklistapp.di
 
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
+import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 import dagger.Module
 import dagger.Provides
@@ -16,4 +17,9 @@ object UseCaseModule {
     @ViewModelScoped
     fun provideGetTasksUseCase(repository: TaskRepository): GetTasksUseCase =
         GetTasksUseCase(repository)
+
+    @Provides
+    @ViewModelScoped
+    fun provideAddTaskUseCase(repository: TaskRepository): AddTaskUseCase =
+        AddTaskUseCase(repository)
 }

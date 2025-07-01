@@ -1,4 +1,4 @@
-package com.spanishdev.tasklistapp.ui.viewmodel
+package com.spanishdev.tasklistapp.ui.tasklist
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
