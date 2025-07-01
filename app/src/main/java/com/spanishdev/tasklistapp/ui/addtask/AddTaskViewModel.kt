@@ -1,9 +1,7 @@
 package com.spanishdev.tasklistapp.ui.addtask
 
-import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,13 +22,22 @@ class AddTaskViewModel @Inject constructor(
         val name: String = "",
         val description: String = "",
         val isLoading: Boolean = false,
-        val error: String? = null,
+        val error: Error? = null,
     )
+
+    sealed class Error {
+        abstract val message: String
+
+        data class InvalidName(override val message: String) : Error()
+        data class InvalidDescription(override val message: String) : Error()
+        data class GenericError(override val message: String) : Error()
+    }
 
     sealed class Event {
         data class NameChanged(val text: String) : Event()
         data class DescriptionChanged(val text: String) : Event()
         data object CreateTask : Event()
+        data object ClearError : Event()
         data object GoBack : Event()
     }
 
@@ -46,16 +53,21 @@ class AddTaskViewModel @Inject constructor(
 
     fun sendEvent(event: Event) = when (event) {
         is Event.CreateTask -> addTask()
+        is Event.ClearError -> _uiState.value = _uiState.value.copy(error = null)
         is Event.GoBack -> {
             TODO()
         }
 
         is Event.DescriptionChanged -> {
-            _uiState.value = _uiState.value.copy(description = event.text)
+            _uiState.value = _uiState.value
+                .copy(description = event.text)
+                .clearErrorIfType<Error.InvalidDescription>()
         }
 
         is Event.NameChanged -> {
-            _uiState.value = _uiState.value.copy(name = event.text)
+            _uiState.value = _uiState.value
+                .copy(name = event.text)
+                .clearErrorIfType<Error.InvalidName>()
         }
     }
 
@@ -68,8 +80,13 @@ class AddTaskViewModel @Inject constructor(
             try {
                 val newTask = addTaskUseCase(state.value.name, state.value.description)
                 finishAndReturn(newTask)
+            } catch (e: AddTaskUseCase.InvalidTaskNameException) {
+                _uiState.value = _uiState.value.copy(error = Error.InvalidName(e.message))
+            } catch (e: AddTaskUseCase.InvalidTaskDescriptionException) {
+                _uiState.value = _uiState.value.copy(error = Error.InvalidDescription(e.message))
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message ?: "Unknown error")
+                _uiState.value =
+                    _uiState.value.copy(error = Error.GenericError(e.message ?: "Unknown error"))
             } finally {
                 _uiState.value = _uiState.value.copy(isLoading = false)
             }
@@ -78,5 +95,13 @@ class AddTaskViewModel @Inject constructor(
 
     private fun finishAndReturn(task: Task) {
         _navigationEvents.tryEmit(NavigationEvent.TaskAddedSuccessfully)
+    }
+
+    private inline fun <reified T : Error> State.clearErrorIfType(): State {
+        return if (error is T) {
+            copy(error = null)
+        } else {
+            this
+        }
     }
 }

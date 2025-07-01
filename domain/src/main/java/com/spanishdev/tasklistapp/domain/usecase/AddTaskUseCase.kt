@@ -23,7 +23,12 @@ class AddTaskUseCase(
         name: String,
         description: String,
     ) = withContext(dispatcher) {
-        require(name.isNotBlank()) { "Task name cannot be blank" }
+        if (name.isBlank()) {
+            throw InvalidTaskNameException()
+        }
+        if (description.isBlank()) {
+            throw InvalidTaskDescriptionException()
+        }
 
         val newTask = Task(
             id = 0L,
@@ -36,4 +41,12 @@ class AddTaskUseCase(
         val id = repository.addTask(newTask)
         return@withContext newTask.copy(id = id)
     }
+
+    data class InvalidTaskNameException(
+        override val message: String = "Task name cannot be blank"
+    ) : Exception()
+
+    data class InvalidTaskDescriptionException(
+        override val message: String = "Task description cannot be blank"
+    ) : Exception()
 }

@@ -1,18 +1,23 @@
 package com.spanishdev.tasklistapp.ui.addtask
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel.Event
+import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel.Error
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,7 +112,9 @@ private fun Content(
 
         OutlinedTextField(
             value = state.name,
-            onValueChange = { sendEvent(Event.NameChanged(it)) },
+            onValueChange = {
+                sendEvent(Event.NameChanged(it))
+            },
             label = { Text(text = stringResource(R.string.add_task_name_label)) },
             placeholder = { Text(text = stringResource(R.string.add_task_name_hint)) },
             singleLine = true,
@@ -114,16 +122,20 @@ private fun Content(
             keyboardActions = KeyboardActions(
                 onNext = { descriptionFocusRequester.requestFocus() }
             ),
-            isError = state.error != null,
+            isError = state.error is Error.InvalidName,
+            supportingText = (state.error as? Error.InvalidName)?.let { { Text(text = it.message) } },
             modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = state.description,
-            onValueChange = { sendEvent(Event.DescriptionChanged(it)) },
+            onValueChange = {
+                sendEvent(Event.DescriptionChanged(it))
+            },
             label = { Text(text = stringResource(R.string.add_task_description_label)) },
             placeholder = { Text(text = stringResource(R.string.add_task_description_hint)) },
-            singleLine = true,
+            singleLine = false,
+            maxLines = 4,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onDone = {
@@ -131,12 +143,33 @@ private fun Content(
                     sendEvent(Event.CreateTask)
                 }
             ),
-            isError = false,
+            isError = state.error is Error.InvalidDescription,
+            supportingText = (state.error as? Error.InvalidDescription)?.let { { Text(text = it.message) } },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
                 .focusRequester(descriptionFocusRequester)
         )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = { sendEvent(Event.CreateTask) },
+            enabled = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+        ) {
+            if (state.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(stringResource(R.string.add_task_button))
+            }
+        }
     }
 }
 
