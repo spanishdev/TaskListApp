@@ -7,6 +7,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -21,9 +23,9 @@ class GetTasksUseCaseTest {
         val repository = mockk<TaskRepository>()
         val useCase = GetTasksUseCase(repository, UnconfinedTestDispatcher())
 
-        coEvery { repository.getTasks() } returns emptyList()
+        coEvery { repository.getTasks() } returns flowOf(emptyList())
 
-        val result = useCase()
+        val result = useCase().first()
 
         assertEquals(emptyList<Task>(), result)
         coVerify { repository.getTasks() }
@@ -57,9 +59,9 @@ class GetTasksUseCaseTest {
             ),
         )
 
-        coEvery { repository.getTasks() } returns expectedTasks
+        coEvery { repository.getTasks() } returns flowOf(expectedTasks)
 
-        val result = useCase()
+        val result = useCase().first()
 
         assertEquals(expectedTasks, result)
         coVerify { repository.getTasks() }

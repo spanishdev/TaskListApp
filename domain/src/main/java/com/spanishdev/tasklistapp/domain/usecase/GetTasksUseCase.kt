@@ -4,13 +4,13 @@ import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 
 class GetTasksUseCase(
     private val repository: TaskRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    suspend operator fun invoke(): List<Task> = withContext(dispatcher) {
-        repository.getTasks()
-    }
+    operator fun invoke(): Flow<List<Task>> = repository.getTasks()
+        .flowOn(dispatcher)
 }
