@@ -95,7 +95,7 @@ fun AddTaskScreen(
                 actions = {
                     IconButton(
                         onClick = { viewModel.sendEvent(Event.CreateTask) },
-                        enabled = true //TODO state.canSaveTask
+                        enabled = true //For accessibility is better to keep this enabled
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
