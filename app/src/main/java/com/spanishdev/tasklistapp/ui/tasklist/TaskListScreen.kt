@@ -1,11 +1,17 @@
 package com.spanishdev.tasklistapp.ui.tasklist
 
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,7 +20,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +36,9 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -113,7 +125,12 @@ fun Content(
             }
 
             is TaskListViewModel.State.Success -> items(state.tasks) { task ->
-                TaskListView(task = task)
+                TaskItemView(
+                    task = task,
+                    onStatusChange = { task, newStatus ->
+                        TODO("Update task status in VM")
+                    }
+                )
             }
         }
     }
@@ -161,7 +178,10 @@ fun ErrorView(
 
 
 @Composable
-fun TaskListView(task: Task) {
+fun TaskItemView(
+    task: Task,
+    onStatusChange: (Task, Status) -> Unit,
+) {
     val statusColor = when (task.status) {
         Status.Pending -> Color.Gray.copy(alpha = 0.1f)
         Status.InProgress -> Color.Blue.copy(alpha = 0.1f)
@@ -175,7 +195,7 @@ fun TaskListView(task: Task) {
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(180.dp)
             .padding(vertical = 4.dp)
     ) {
         Column(
@@ -197,17 +217,72 @@ fun TaskListView(task: Task) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
             )
 
-            Text(
-                text = task.createdAt,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-            )
+            Spacer(modifier = Modifier.weight(1f))
+
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight()
+            ) {
+                Text(
+                    text = task.createdAt,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                )
+
+                StatusChip(
+                    status = task.status,
+                    onStatusChange = { newStatus ->
+                        onStatusChange(task, newStatus)
+                    }
+                )
+            }
         }
 
     }
+}
+
+@Composable
+fun StatusChip(
+    status: Status,
+    onStatusChange: (Status) -> Unit,
+) {
+
+    var showDropdown by remember { mutableStateOf(false) }
+
+    Box {
+        FilterChip(
+            selected = true,
+            onClick = { showDropdown = true },
+            label = { Text(stringResource(status.toResource())) },
+            modifier = Modifier.width(100.dp)
+        )
+
+        DropdownMenu(
+            expanded = showDropdown,
+            onDismissRequest = { showDropdown = false }
+        ) {
+            Status.entries.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(item.toResource())) },
+                    onClick = {
+                        onStatusChange(item)
+                        showDropdown = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@StringRes
+private fun Status.toResource(): Int = when (this) {
+    Status.Pending -> R.string.status_pending
+    Status.InProgress -> R.string.status_in_progress
+    Status.Done -> R.string.status_done
+    Status.Cancelled -> R.string.status_cancelled
 }
 
 @Preview
