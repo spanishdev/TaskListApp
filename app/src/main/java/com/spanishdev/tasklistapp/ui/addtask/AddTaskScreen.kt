@@ -20,6 +20,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -48,6 +52,7 @@ fun AddTaskScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvents.collect { event ->
@@ -55,6 +60,22 @@ fun AddTaskScreen(
                 AddTaskViewModel.NavigationEvent.TaskAddedSuccessfully -> {
                     onSuccessNavigation()
                 }
+            }
+        }
+    }
+
+    LaunchedEffect(state.error) {
+        (state.error as? Error.GenericError)?.let { e ->
+            val result = snackbarHostState.showSnackbar(
+                message = e.message,
+                actionLabel = "Dismiss",
+                duration = SnackbarDuration.Long,
+                withDismissAction = true
+            )
+
+            when (result) {
+                SnackbarResult.ActionPerformed -> viewModel.sendEvent(Event.ClearError)
+                SnackbarResult.Dismissed -> viewModel.sendEvent(Event.ClearError)
             }
         }
     }
@@ -74,7 +95,7 @@ fun AddTaskScreen(
                 actions = {
                     IconButton(
                         onClick = { viewModel.sendEvent(Event.CreateTask) },
-                        enabled = true //state.canSaveTask
+                        enabled = true //TODO state.canSaveTask
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
@@ -83,6 +104,9 @@ fun AddTaskScreen(
                     }
                 }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
         }
     ) { paddingValues ->
         Content(
