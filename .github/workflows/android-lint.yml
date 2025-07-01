@@ -11,27 +11,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Give execute permission for gradlew
-        run: chmod +x ./gradlew
+      - run: chmod +x ./gradlew
 
-      - name: Setup JDK 17
-        uses: actions/setup-java@v3
+      - uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Cache Gradle
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper/
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/gradle.lockfile') }}
+            ~/.gradle/build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle.lockfile') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Run Android Lint
-        run: ./gradlew lint --no-daemon --stacktrace
+      - name: Run lint only on changed modules
+        run: |
+          changed_modules=$(git diff --name-only origin/master...HEAD | grep 'build.gradle' | sed 's|/build.gradle.*||' | sort -u)
+          echo "Changed modules: $changed_modules"
+          if [ -z "$changed_modules" ]; then
+            echo "No modules changed, running lint globally"
+            ./gradlew lint --no-daemon --stacktrace
+          else
+            for module in $changed_modules; do
+              echo "Running lint for module: $module"
+              ./gradlew :$module:lint --no-daemon --stacktrace || exit 1
+            done
+          fi
