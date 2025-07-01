@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
+import com.spanishdev.tasklistapp.ui.tasklist.TaskListViewModel.Event
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,8 +60,6 @@ fun TaskListScreen(
 ) {
     val uiState by viewModel.state.collectAsState()
     val isRefreshingState by viewModel.isRefreshingState.collectAsState()
-    val isRefreshing = isRefreshingState
-
     val pullToRefreshState = rememberPullToRefreshState()
 
     Scaffold(
@@ -79,14 +78,14 @@ fun TaskListScreen(
         },
     ) { paddingValues ->
         PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = { viewModel.refreshTasks() },
+            isRefreshing = isRefreshingState,
+            onRefresh = { viewModel.sendEvent(Event.Refresh) },
             state = pullToRefreshState,
             modifier = modifier.padding(paddingValues),
             indicator = {
                 Indicator(
                     modifier = Modifier.align(Alignment.TopCenter),
-                    isRefreshing = isRefreshing,
+                    isRefreshing = isRefreshingState,
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     state = pullToRefreshState

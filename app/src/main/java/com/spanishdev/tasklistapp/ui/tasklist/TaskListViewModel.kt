@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
+import com.spanishdev.tasklistapp.domain.usecase.UpdateTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,11 @@ class TaskListViewModel @Inject constructor(
         data class Error(val message: String) : State()
     }
 
+    sealed class Event {
+        data class UpdateTask(val task: Task) : Event()
+        data object Refresh : Event()
+    }
+
     val state: StateFlow<State> = getTasksUseCase()
         .map { tasks ->
             if(tasks.isEmpty()) State.Empty else State.Success(tasks)
@@ -48,8 +54,13 @@ class TaskListViewModel @Inject constructor(
     private val _isRefreshingState = MutableStateFlow(false)
     val isRefreshingState: StateFlow<Boolean> = _isRefreshingState.asStateFlow()
 
-    fun refreshTasks() {
-        if(isRefreshingState.value) return
+    fun sendEvent(event: Event) = when (event) {
+        is Event.Refresh -> refreshTasks()
+        is Event.UpdateTask -> updateTask(event.task)
+    }
+
+    private fun refreshTasks() {
+        if(_isRefreshingState.value) return
         //Not needed as state updates automatically. May be needed for Backend implementation.
         viewModelScope.launch {
             _isRefreshingState.value = true
