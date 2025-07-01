@@ -90,8 +90,8 @@ class AddTaskViewModel @Inject constructor(
         }
     }
 
-    private fun finishAndReturn() {
-        _navigationEvents.tryEmit(NavigationEvent.TaskAddedSuccessfully)
+    private suspend fun finishAndReturn() {
+        _navigationEvents.emit(NavigationEvent.TaskAddedSuccessfully)
     }
 
     private inline fun <reified T : Error> State.clearErrorIfType(): State {
