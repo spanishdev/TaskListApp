@@ -1,6 +1,8 @@
 package com.spanishdev.tasklistapp.ui.tasklist
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,9 +23,11 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,14 +35,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,11 +77,26 @@ fun TaskListScreen(
     val isRefreshingState by viewModel.isRefreshingState.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
 
+    var isInSelectableMode by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState) {
+        if (uiState is TaskListViewModel.State.Loaded) {
+            isInSelectableMode = (uiState as TaskListViewModel.State.Loaded).selected.isNotEmpty()
+        }
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-            )
+            if (isInSelectableMode) {
+                SelectionAppBar(
+                    onClearSelection = { viewModel.sendEvent(Event.ClearSelection) },
+                    onDelete = { viewModel.sendEvent(Event.DeleteSelectedTasks) }
+                )
+            } else {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.app_name)) },
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddTaskNavigation) {
@@ -102,18 +124,62 @@ fun TaskListScreen(
         ) {
             Content(
                 state = uiState,
+                isInSelectableMode = isInSelectableMode,
                 onTaskUpdated = { task ->
                     viewModel.sendEvent(Event.UpdateTask(task))
+                },
+                onTaskSelected = { taskId, selected ->
+                    viewModel.sendEvent(Event.SelectTask(taskId, selected))
+                },
+                onSelectedModeChange = { taskId ->
+                    if (!isInSelectableMode) {
+                        isInSelectableMode = true
+                        viewModel.sendEvent(Event.SelectTask(taskId, true))
+                    }
                 }
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectionAppBar(
+    onClearSelection: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    TopAppBar(
+        title = { Text(stringResource(R.string.app_name)) },
+        navigationIcon = {
+            IconButton(onClick = onClearSelection) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Clear selection"
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete selected",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    )
+}
+
 @Composable
 fun Content(
     state: TaskListViewModel.State,
+    isInSelectableMode: Boolean,
     onTaskUpdated: (Task) -> Unit,
+    onTaskSelected: (Long, Boolean) -> Unit,
+    onSelectedModeChange: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -137,9 +203,13 @@ fun Content(
                 LoadingView(modifier = Modifier.fillParentMaxSize())
             }
 
-            is TaskListViewModel.State.Success -> items(state.tasks) { task ->
+            is TaskListViewModel.State.Loaded -> items(state.tasks) { task ->
                 TaskItemView(
                     task = task,
+                    isSelected = state.selected.contains(task.id),
+                    isSelectableMode = isInSelectableMode,
+                    onLongClick = onSelectedModeChange,
+                    onClick = { id, selected -> onTaskSelected(id, selected) },
                     onTaskUpdated = { newTask ->
                         onTaskUpdated(newTask)
                     }
@@ -190,10 +260,15 @@ fun ErrorView(
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TaskItemView(
     task: Task,
+    isSelectableMode: Boolean,
+    isSelected: Boolean,
     onTaskUpdated: (Task) -> Unit,
+    onLongClick: (Long) -> Unit,
+    onClick: (Long, Boolean) -> Unit,
 ) {
     val statusColor = when (task.status) {
         Status.Pending -> Color.Gray.copy(alpha = 0.1f)
@@ -208,54 +283,68 @@ fun TaskItemView(
         ),
         modifier = Modifier
             .fillMaxWidth()
+            .combinedClickable(
+                onClick = { onClick(task.id, !isSelected) },
+                onLongClick = { onLongClick(task.id) },
+            )
             .height(180.dp)
             .padding(vertical = 4.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-        ) {
-            Text(
-                text = task.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
 
-            Text(
-                text = task.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-            )
+        Row(modifier = Modifier.padding(16.dp)) {
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-            ) {
-                Text(
-                    text = task.createdAt,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                )
-
-                StatusChip(
-                    status = task.status,
-                    onStatusChange = { newStatus ->
-                        onTaskUpdated(task.copy(status = newStatus))
-                    }
+            if (isSelectableMode) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onClick(task.id, it) }
                 )
             }
-        }
 
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+            ) {
+                Text(
+                    text = task.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = task.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                ) {
+                    Text(
+                        text = task.createdAt,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    )
+
+                    StatusChip(
+                        status = task.status,
+                        onStatusChange = { newStatus ->
+                            onTaskUpdated(task.copy(status = newStatus))
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -265,7 +354,7 @@ fun StatusChip(
     onStatusChange: (Status) -> Unit,
 ) {
     var showDropdown by remember { mutableStateOf(false) }
-    val statusText = stringResource(status.toResource()) 
+    val statusText = stringResource(status.toResource())
     Box {
         FilterChip(
             selected = true,
@@ -369,8 +458,14 @@ fun PreviewContent() {
             createdAt = "19-06-2025 22:00"
         ),
     )
-    val state = TaskListViewModel.State.Success(tasks)
-    Content(state, {})
+    val state = TaskListViewModel.State.Loaded(tasks, emptySet())
+    Content(
+        state = state,
+        isInSelectableMode = false,
+        onTaskUpdated = {},
+        onTaskSelected = { _, _ -> },
+        onSelectedModeChange = {}
+    )
 }
 
 
