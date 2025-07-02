@@ -25,7 +25,10 @@ fun TaskAppNavigation() {
             TaskListScreen(
                 viewModel = viewModel,
                 onAddTaskNavigation = {
-                    navController.navigate(AppRoutes.TaskForm)
+                    navController.navigate(AppRoutes.AddTask)
+                },
+                onEditTaskNavigation = { taskId ->
+                    navController.navigate(AppRoutes.EditTask(taskId))
                 }
             )
         }
