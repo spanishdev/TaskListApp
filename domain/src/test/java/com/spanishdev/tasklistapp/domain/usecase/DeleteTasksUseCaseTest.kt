@@ -16,53 +16,53 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class DeleteTaskUseCaseTest {
+class DeleteTasksUseCaseTest {
 
     @Test
     fun `WHEN Delete Task success THEN returns true`() = runTest {
         val repository = mockk<TaskRepository>()
-        val useCase = DeleteTaskUseCase(repository, UnconfinedTestDispatcher())
+        val useCase = DeleteTasksUseCase(repository, UnconfinedTestDispatcher())
         val taskToDelete = Task(45L, "Name", "Description", Status.Pending, DEFAULT_DATE)
 
-        coEvery { repository.deleteTask(any()) } returns true
+        coEvery { repository.deleteTasks(any()) } returns true
 
-        val task = useCase(taskToDelete)
+        val task = useCase(listOf(taskToDelete.id))
 
         assertTrue(task)
-        coVerify { repository.deleteTask(taskToDelete) }
+        coVerify { repository.deleteTasks(listOf(taskToDelete.id)) }
     }
 
     @Test
     fun `WHEN Delete Task fail THEN returns false`() = runTest {
         val repository = mockk<TaskRepository>()
-        val useCase = DeleteTaskUseCase(repository, UnconfinedTestDispatcher())
+        val useCase = DeleteTasksUseCase(repository, UnconfinedTestDispatcher())
         val taskToDelete = Task(45L, "Name", "Description", Status.Pending, DEFAULT_DATE)
 
-        coEvery { repository.deleteTask(any()) } returns false
+        coEvery { repository.deleteTasks(any()) } returns false
 
-        val task = useCase(taskToDelete)
+        val task = useCase(listOf(taskToDelete.id))
 
         assertFalse(task)
-        coVerify { repository.deleteTask(taskToDelete) }
+        coVerify { repository.deleteTasks(listOf(taskToDelete.id)) }
     }
 
     @Test
     fun `WHEN error thrown THEN raise an exception`() = runTest {
         val repository = mockk<TaskRepository>()
-        val useCase = DeleteTaskUseCase(repository, UnconfinedTestDispatcher())
+        val useCase = DeleteTasksUseCase(repository, UnconfinedTestDispatcher())
         val expectedException = RuntimeException("Database error")
         val taskToDelete = Task(45L, "Name", "Description", Status.Pending, DEFAULT_DATE)
 
-        coEvery { repository.deleteTask(any()) } throws expectedException
+        coEvery { repository.deleteTasks(any()) } throws expectedException
 
         try {
-            useCase(taskToDelete)
+            useCase(listOf(taskToDelete.id))
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
             assertEquals(expectedException.message, e.message)
         }
 
-        coVerify { repository.deleteTask(any()) }
+        coVerify { repository.deleteTasks(any()) }
     }
 
     companion object {

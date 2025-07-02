@@ -14,7 +14,6 @@ interface TaskDao {
     @Query("SELECT * FROM tasks ORDER BY createdAt DESC")
     fun getAllTasks(): Flow<List<TaskEntity>>
 
-
     @Query("SELECT * FROM tasks ORDER BY createdAt ASC")
     fun getAllTasksByCreatedAtAsc(): Flow<List<TaskEntity>>
 
@@ -46,9 +45,6 @@ interface TaskDao {
     @Update
     suspend fun updateTask(taskEntity: TaskEntity): Int
 
-    @Delete
-    suspend fun deleteTask(taskEntity: TaskEntity): Int
-
-    @Query("DELETE FROM tasks")
-    suspend fun deleteAllTasks()
+    @Query("DELETE FROM tasks WHERE id IN (:taskIds)")
+    suspend fun deleteTasksByIds(taskIds: List<Long>): Int
 }

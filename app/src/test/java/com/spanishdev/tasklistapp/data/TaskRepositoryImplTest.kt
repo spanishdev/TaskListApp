@@ -53,55 +53,29 @@ class TaskRepositoryImplTest {
 
     @Test
     fun `WHEN delete task and rowsaffected gt 0 THEN returns true`() = runTest {
-        val task = Task(
-            id = 1L,
-            name = "Name",
-            description = "Description",
-            status = Status.InProgress,
-            createdAt = "12-06-2025 13:00"
-        )
+        val taskList = listOf(1L)
 
-        coEvery { taskDao.deleteTask(any()) } returns 1
+        coEvery { taskDao.deleteTasksByIds(any()) } returns 1
 
-        val deleted = taskRepository.deleteTask(task)
+        val deleted = taskRepository.deleteTasks(taskList)
 
         assertTrue(deleted)
         coVerify {
-            taskDao.deleteTask(
-                match { entity ->
-                    entity.id == 1L
-                            && entity.name == "Name"
-                            && entity.description == "Description"
-                            && entity.status == "IN_PROGRESS"
-                }
-            )
+            taskDao.deleteTasksByIds(taskList)
         }
     }
 
     @Test
     fun `WHEN delete task and rowsaffected is 0 THEN returns false`() = runTest {
-        val task = Task(
-            id = 1L,
-            name = "Name",
-            description = "Description",
-            status = Status.InProgress,
-            createdAt = "12-06-2025 13:00"
-        )
+        val taskList = listOf(1L)
 
-        coEvery { taskDao.deleteTask(any()) } returns 0
+        coEvery { taskDao.deleteTasksByIds(any()) } returns 0
 
-        val deleted = taskRepository.deleteTask(task)
+        val deleted = taskRepository.deleteTasks(taskList)
 
         assertFalse(deleted)
         coVerify {
-            taskDao.deleteTask(
-                match { entity ->
-                    entity.id == 1L
-                            && entity.name == "Name"
-                            && entity.description == "Description"
-                            && entity.status == "IN_PROGRESS"
-                }
-            )
+            taskDao.deleteTasksByIds(taskList)
         }
     }
 
