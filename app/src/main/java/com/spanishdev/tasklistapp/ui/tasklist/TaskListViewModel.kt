@@ -37,12 +37,13 @@ class TaskListViewModel @Inject constructor(
 
     sealed class Event {
         data class UpdateTask(val task: Task) : Event()
+        data class DeleteTasks(val tasks: List<Long>) : Event()
         data object Refresh : Event()
     }
 
     val state: StateFlow<State> = getTasksUseCase()
         .map { tasks ->
-            if(tasks.isEmpty()) State.Empty else State.Success(tasks)
+            if (tasks.isEmpty()) State.Empty else State.Success(tasks)
         }
         .catch { error ->
             State.Error(error.message ?: "Unknown error")
@@ -60,10 +61,11 @@ class TaskListViewModel @Inject constructor(
     fun sendEvent(event: Event) = when (event) {
         is Event.Refresh -> refreshTasks()
         is Event.UpdateTask -> updateTask(event.task)
+        is Event.DeleteTasks -> deleteTasks(event.tasks)
     }
 
     private fun refreshTasks() {
-        if(_isRefreshingState.value) return
+        if (_isRefreshingState.value) return
         //Not needed as state updates automatically. May be needed for Backend implementation.
         viewModelScope.launch {
             _isRefreshingState.value = true
@@ -75,6 +77,12 @@ class TaskListViewModel @Inject constructor(
     private fun updateTask(task: Task) {
         viewModelScope.launch {
             updateTaskUseCase(task)
+        }
+    }
+
+    private fun deleteTasks(tasks: List<Long>) {
+        viewModelScope.launch {
+            deleteTasksUseCase(tasks)
         }
     }
 }
