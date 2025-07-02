@@ -38,6 +38,7 @@ class TaskListViewModel @Inject constructor(
     sealed class Event {
         data class UpdateTask(val task: Task) : Event()
         data class SelectTask(val taskId: Long, val selected: Boolean) : Event()
+        data object ClearSelection : Event()
         data object DeleteSelectedTasks : Event()
         data object Refresh : Event()
     }
@@ -75,22 +76,9 @@ class TaskListViewModel @Inject constructor(
     fun sendEvent(event: Event) = when (event) {
         is Event.Refresh -> refreshTasks()
         is Event.UpdateTask -> updateTask(event.task)
-        is Event.SelectTask -> handleSelectTask(event.taskId, event.selected)
         is Event.DeleteSelectedTasks -> deleteSelectedTasks()
-    }
-
-    private fun handleSelectTask(taskId: Long, isSelected: Boolean) {
-        (state.value as? State.Loaded)?.let { taskState ->
-            val selectedTasks = taskState.selected.toMutableSet()
-
-            if (isSelected) {
-                selectedTasks.add(taskId)
-            } else {
-                selectedTasks.remove(taskId)
-            }
-
-            _state.value = taskState.copy(selected = selectedTasks)
-        }
+        is Event.SelectTask -> handleSelectTask(event.taskId, event.selected)
+        is Event.ClearSelection -> handleSelectionClear()
     }
 
     private fun refreshTasks() {
@@ -116,6 +104,26 @@ class TaskListViewModel @Inject constructor(
                 deleteTasksUseCase(selected.toList())
                 _state.value = taskState.copy(selected = emptySet())
             }
+        }
+    }
+
+    private fun handleSelectTask(taskId: Long, isSelected: Boolean) {
+        (state.value as? State.Loaded)?.let { taskState ->
+            val selectedTasks = taskState.selected.toMutableSet()
+
+            if (isSelected) {
+                selectedTasks.add(taskId)
+            } else {
+                selectedTasks.remove(taskId)
+            }
+
+            _state.value = taskState.copy(selected = selectedTasks)
+        }
+    }
+
+    private fun handleSelectionClear() {
+        (state.value as? State.Loaded)?.let { taskState ->
+            _state.value = taskState.copy(selected = emptySet())
         }
     }
 }
