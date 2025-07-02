@@ -2,6 +2,7 @@ package com.spanishdev.tasklistapp.di
 
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase
+import com.spanishdev.tasklistapp.domain.usecase.DeleteTaskUseCase
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 import com.spanishdev.tasklistapp.domain.usecase.UpdateTaskUseCase
 import dagger.Module
@@ -29,4 +30,9 @@ object UseCaseModule {
     @ViewModelScoped
     fun provideUpdateTaskUseCase(repository: TaskRepository): UpdateTaskUseCase =
         UpdateTaskUseCase(repository)
+
+    @Provides
+    @ViewModelScoped
+    fun provideDeleteTaskUseCase(repository: TaskRepository): DeleteTaskUseCase =
+        DeleteTaskUseCase(repository)
 }
