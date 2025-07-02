@@ -10,13 +10,9 @@ import com.spanishdev.tasklistapp.domain.usecase.UpdateTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,29 +27,47 @@ class TaskListViewModel @Inject constructor(
     sealed class State {
         data object Loading : State()
         data object Empty : State()
-        data class Success(val tasks: List<Task>) : State()
+        data class Loaded(
+            val tasks: List<Task>,
+            val selected: Set<Long>,
+        ) : State()
+
         data class Error(val message: String) : State()
     }
 
     sealed class Event {
         data class UpdateTask(val task: Task) : Event()
-        data class DeleteTasks(val tasks: List<Long>) : Event()
+        data class SelectTask(val taskId: Long, val selected: Boolean) : Event()
+        data object DeleteSelectedTasks : Event()
         data object Refresh : Event()
     }
 
-    val state: StateFlow<State> = getTasksUseCase()
-        .map { tasks ->
-            if (tasks.isEmpty()) State.Empty else State.Success(tasks)
+    private val _state = MutableStateFlow<State>(State.Loading)
+    val state: StateFlow<State> = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            getTasksUseCase()
+                .catch { error ->
+                    _state.value = State.Error(error.message ?: "Unknown error")
+                    _isRefreshingState.value = false
+                }
+                .collect { tasks ->
+                    val currentSelected = (state.value as? State.Loaded)?.selected ?: emptySet()
+                    val filteredSelected = currentSelected.filter { id ->
+                        tasks.any { it.id == id }
+                    }.toSet()
+
+                    _state.value = if (tasks.isEmpty()) {
+                        State.Empty
+                    } else {
+                        State.Loaded(tasks, filteredSelected)
+                    }
+                    _isRefreshingState.value = false
+                }
         }
-        .catch { error ->
-            State.Error(error.message ?: "Unknown error")
-        }
-        .onCompletion { _isRefreshingState.value = false }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = State.Loading
-        )
+    }
+
 
     private val _isRefreshingState = MutableStateFlow(false)
     val isRefreshingState: StateFlow<Boolean> = _isRefreshingState.asStateFlow()
@@ -61,7 +75,22 @@ class TaskListViewModel @Inject constructor(
     fun sendEvent(event: Event) = when (event) {
         is Event.Refresh -> refreshTasks()
         is Event.UpdateTask -> updateTask(event.task)
-        is Event.DeleteTasks -> deleteTasks(event.tasks)
+        is Event.SelectTask -> handleSelectTask(event.taskId, event.selected)
+        is Event.DeleteSelectedTasks -> deleteSelectedTasks()
+    }
+
+    private fun handleSelectTask(taskId: Long, isSelected: Boolean) {
+        (state.value as? State.Loaded)?.let { taskState ->
+            val selectedTasks = taskState.selected.toMutableSet()
+
+            if (isSelected) {
+                selectedTasks.add(taskId)
+            } else {
+                selectedTasks.remove(taskId)
+            }
+
+            _state.value = taskState.copy(selected = selectedTasks)
+        }
     }
 
     private fun refreshTasks() {
@@ -80,9 +109,13 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
-    private fun deleteTasks(tasks: List<Long>) {
+    private fun deleteSelectedTasks() {
         viewModelScope.launch {
-            deleteTasksUseCase(tasks)
+            (state.value as? State.Loaded)?.let { taskState ->
+                val selected = taskState.selected
+                deleteTasksUseCase(selected.toList())
+                _state.value = taskState.copy(selected = emptySet())
+            }
         }
     }
 }
