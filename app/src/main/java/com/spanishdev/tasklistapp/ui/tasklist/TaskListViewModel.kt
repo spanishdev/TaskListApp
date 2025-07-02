@@ -24,6 +24,22 @@ class TaskListViewModel @Inject constructor(
     private val deleteTasksUseCase: DeleteTasksUseCase,
 ) : ViewModel() {
 
+    private val _state = MutableStateFlow<State>(State.Loading)
+    val state: StateFlow<State> = _state.asStateFlow()
+
+    private val _isRefreshingState = MutableStateFlow(false)
+    val isRefreshingState: StateFlow<Boolean> = _isRefreshingState.asStateFlow()
+
+    constructor(
+        getTasksUseCase: GetTasksUseCase,
+        updateTaskUseCase: UpdateTaskUseCase,
+        deleteTasksUseCase: DeleteTasksUseCase,
+        initialState: State
+    ) : this(getTasksUseCase, updateTaskUseCase, deleteTasksUseCase) {
+        _state.value = initialState
+        observeTasks()
+    }
+
     @Immutable
     sealed class State {
         data object Loading : State()
@@ -44,12 +60,6 @@ class TaskListViewModel @Inject constructor(
         data object DeleteSelectedTasks : Event()
         data object Refresh : Event()
     }
-
-    private val _state = MutableStateFlow<State>(State.Loading)
-    val state: StateFlow<State> = _state.asStateFlow()
-
-    private val _isRefreshingState = MutableStateFlow(false)
-    val isRefreshingState: StateFlow<Boolean> = _isRefreshingState.asStateFlow()
 
     init {
         observeTasks()
