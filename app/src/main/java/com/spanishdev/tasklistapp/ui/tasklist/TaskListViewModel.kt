@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spanishdev.tasklistapp.domain.model.Task
+import com.spanishdev.tasklistapp.domain.usecase.DeleteTasksUseCase
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 import com.spanishdev.tasklistapp.domain.usecase.UpdateTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
     private val updateTaskUseCase: UpdateTaskUseCase,
+    private val deleteTasksUseCase: DeleteTasksUseCase,
     getTasksUseCase: GetTasksUseCase,
 ) : ViewModel() {
 

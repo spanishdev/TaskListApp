@@ -19,8 +19,8 @@ class TaskRepositoryImpl @Inject constructor(
     override suspend fun addTask(task: Task): Long =
         taskDao.insertTask(taskMapper.toEntity(task))
 
-    override suspend fun deleteTask(task: Task): Boolean {
-        val rowsAffected = taskDao.deleteTask(taskMapper.toEntity(task))
+    override suspend fun deleteTasks(tasks: List<Long>): Boolean {
+        val rowsAffected = taskDao.deleteTasksByIds(tasks)
         return rowsAffected > 0
     }
 

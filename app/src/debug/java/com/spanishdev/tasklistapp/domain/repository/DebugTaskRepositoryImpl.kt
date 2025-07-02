@@ -36,8 +36,8 @@ class DebugTaskRepositoryImpl : TaskRepository {
         return task.id
     }
 
-    override suspend fun deleteTask(task: Task): Boolean {
-        return taskList.remove(task)
+    override suspend fun deleteTasks(tasks: List<Long>): Boolean {
+        return taskList.removeIf { it.id in tasks }
     }
 
     override suspend fun updateTask(task: Task): Boolean {
