@@ -3,10 +3,11 @@
 
     <!-- Add task -->
     <string name="add_task_title">Add task</string>
-    <string name="add_task_name_label">Task name</string>
-    <string name="add_task_name_hint">Buy groceries</string>
-    <string name="add_task_description_label">Task description</string>
-    <string name="add_task_description_hint">Go to supermarket</string>
+    <string name="edit_task">Edit task</string>
+    <string name="task_name_label">Task name</string>
+    <string name="task_name_hint">Buy groceries</string>
+    <string name="task_description_label">Task description</string>
+    <string name="task_description_hint">Go to supermarket</string>
     <string name="add_task_button">Create new task</string>
 
     <!-- Status !-->
