@@ -17,6 +17,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,7 +47,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -229,7 +237,9 @@ fun TaskItemView(
             Row(
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth().wrapContentHeight()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
             ) {
                 Text(
                     text = task.createdAt,
@@ -254,15 +264,30 @@ fun StatusChip(
     status: Status,
     onStatusChange: (Status) -> Unit,
 ) {
-
     var showDropdown by remember { mutableStateOf(false) }
-
+    val statusText = stringResource(status.toResource()) 
     Box {
         FilterChip(
             selected = true,
             onClick = { showDropdown = true },
             label = { Text(stringResource(status.toResource())) },
-            modifier = Modifier.width(100.dp)
+            modifier = Modifier
+                .width(150.dp)
+                .semantics {
+                    contentDescription = "Status selector: $statusText"
+                },
+            leadingIcon = {
+                Icon(
+                    imageVector = status.icon,
+                    contentDescription = null
+                )
+            },
+            trailingIcon = {
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = "Expand"
+                )
+            }
         )
 
         DropdownMenu(
@@ -289,6 +314,15 @@ private fun Status.toResource(): Int = when (this) {
     Status.Done -> R.string.status_done
     Status.Cancelled -> R.string.status_cancelled
 }
+
+val Status.icon: ImageVector
+    get() = when (this) {
+        Status.Pending -> Icons.Default.DateRange
+        Status.InProgress -> Icons.Default.PlayArrow
+        Status.Done -> Icons.Default.CheckCircle
+        Status.Cancelled -> Icons.Default.Close
+    }
+
 
 @Preview
 @Composable
