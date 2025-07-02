@@ -13,14 +13,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
+    private val getTasksUseCase: GetTasksUseCase,
     private val updateTaskUseCase: UpdateTaskUseCase,
     private val deleteTasksUseCase: DeleteTasksUseCase,
-    getTasksUseCase: GetTasksUseCase,
 ) : ViewModel() {
 
     @Immutable
@@ -35,6 +36,7 @@ class TaskListViewModel @Inject constructor(
         data class Error(val message: String) : State()
     }
 
+    @Immutable
     sealed class Event {
         data class UpdateTask(val task: Task) : Event()
         data class SelectTask(val taskId: Long, val selected: Boolean) : Event()
@@ -46,7 +48,14 @@ class TaskListViewModel @Inject constructor(
     private val _state = MutableStateFlow<State>(State.Loading)
     val state: StateFlow<State> = _state.asStateFlow()
 
+    private val _isRefreshingState = MutableStateFlow(false)
+    val isRefreshingState: StateFlow<Boolean> = _isRefreshingState.asStateFlow()
+
     init {
+        observeTasks()
+    }
+
+    private fun observeTasks() {
         viewModelScope.launch {
             getTasksUseCase()
                 .catch { error ->
@@ -68,10 +77,6 @@ class TaskListViewModel @Inject constructor(
                 }
         }
     }
-
-
-    private val _isRefreshingState = MutableStateFlow(false)
-    val isRefreshingState: StateFlow<Boolean> = _isRefreshingState.asStateFlow()
 
     fun sendEvent(event: Event) = when (event) {
         is Event.Refresh -> refreshTasks()
@@ -99,31 +104,35 @@ class TaskListViewModel @Inject constructor(
 
     private fun deleteSelectedTasks() {
         viewModelScope.launch {
-            (state.value as? State.Loaded)?.let { taskState ->
-                val selected = taskState.selected
-                deleteTasksUseCase(selected.toList())
-                _state.value = taskState.copy(selected = emptySet())
+            _state.update { current ->
+                (current as? State.Loaded)?.let { taskState ->
+                    val selected = taskState.selected
+                    deleteTasksUseCase(selected.toList())
+                    taskState.copy(selected = emptySet())
+                } ?: current
             }
         }
     }
 
     private fun handleSelectTask(taskId: Long, isSelected: Boolean) {
-        (state.value as? State.Loaded)?.let { taskState ->
-            val selectedTasks = taskState.selected.toMutableSet()
+        _state.update { current ->
+            (current as? State.Loaded)?.let { taskState ->
+                val selectedTasks = taskState.selected.toMutableSet().apply {
+                    if (isSelected) {
+                        add(taskId)
+                    } else {
+                        remove(taskId)
+                    }
+                }
 
-            if (isSelected) {
-                selectedTasks.add(taskId)
-            } else {
-                selectedTasks.remove(taskId)
-            }
-
-            _state.value = taskState.copy(selected = selectedTasks)
+                taskState.copy(selected = selectedTasks)
+            } ?: current
         }
     }
 
     private fun handleSelectionClear() {
-        (state.value as? State.Loaded)?.let { taskState ->
-            _state.value = taskState.copy(selected = emptySet())
+        _state.update { current ->
+            (current as? State.Loaded)?.copy(selected = emptySet()) ?: current
         }
     }
 }
