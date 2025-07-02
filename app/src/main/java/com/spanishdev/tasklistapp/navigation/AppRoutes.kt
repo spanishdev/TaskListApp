@@ -9,5 +9,5 @@ sealed class AppRoutes {
     data object TaskList: AppRoutes()
 
     @Serializable
-    data object AddTask: AppRoutes()
+    data object TaskForm: AppRoutes()
 }

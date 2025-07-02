@@ -1,4 +1,4 @@
-package com.spanishdev.tasklistapp.ui.addtask
+package com.spanishdev.tasklistapp.ui.taskform
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -40,13 +40,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.spanishdev.tasklistapp.R
-import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel.Event
-import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel.Error
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormViewModel.Event
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormViewModel.Error
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(
-    viewModel: AddTaskViewModel,
+fun TaskFormScreen(
+    viewModel: TaskFormViewModel,
     onBackNavigation: () -> Unit,
     onSuccessNavigation: () -> Unit,
     modifier: Modifier = Modifier
@@ -57,7 +57,7 @@ fun AddTaskScreen(
     LaunchedEffect(Unit) {
         viewModel.navigationEvents.collect { event ->
             when (event) {
-                AddTaskViewModel.NavigationEvent.TaskAddedSuccessfully -> {
+                TaskFormViewModel.NavigationEvent.TaskAddedSuccessfully -> {
                     onSuccessNavigation()
                 }
             }
@@ -121,7 +121,7 @@ fun AddTaskScreen(
 
 @Composable
 private fun Content(
-    state: AddTaskViewModel.State,
+    state: TaskFormViewModel.State,
     sendEvent: (Event) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -199,9 +199,9 @@ private fun Content(
 
 @Preview
 @Composable
-fun PreviewAddTask() {
+fun PreviewTaskForm() {
     Content(
-        state = AddTaskViewModel.State(),
+        state = TaskFormViewModel.State(),
         sendEvent = {}
     )
 }

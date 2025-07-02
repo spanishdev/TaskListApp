@@ -1,4 +1,4 @@
-package com.spanishdev.tasklistapp.ui.addtask
+package com.spanishdev.tasklistapp.ui.taskform
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AddTaskViewModel @Inject constructor(
+class TaskFormViewModel @Inject constructor(
     private val addTaskUseCase: AddTaskUseCase
 ) : ViewModel() {
 
