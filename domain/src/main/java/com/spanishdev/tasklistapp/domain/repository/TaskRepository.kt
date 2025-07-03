@@ -4,7 +4,13 @@ import com.spanishdev.tasklistapp.domain.model.Task
 import kotlinx.coroutines.flow.Flow
 
 interface TaskRepository {
-    fun getTasks(): Flow<List<Task>>
+    enum class TaskSort {
+        CREATE_DATE,
+        NAME,
+        STATUS,
+    }
+
+    fun getTasks(sorting: TaskSort): Flow<List<Task>>
 
     suspend fun addTask(task: Task): Long
     suspend fun deleteTasks(tasks: List<Long>): Boolean
