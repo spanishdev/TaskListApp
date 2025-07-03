@@ -4,6 +4,7 @@ import com.spanishdev.tasklistapp.database.dao.TaskDao
 import com.spanishdev.tasklistapp.database.entities.TaskEntity
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
+import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -152,9 +153,9 @@ class TaskRepositoryImplTest {
             ),
         )
 
-        coEvery { taskDao.getAllTasks() } returns flowOf(taskList)
+        coEvery { taskDao.getAllTasksByCreatedAtAsc() } returns flowOf(taskList)
 
-        val list = taskRepository.getTasks().first()
+        val list = taskRepository.getTasks(DEFAULT_SORT).first()
 
         val expected = listOf(
             Task(
@@ -176,7 +177,7 @@ class TaskRepositoryImplTest {
         assertTrue(list == expected)
 
         coVerify {
-            taskDao.getAllTasks()
+            taskDao.getAllTasksByCreatedAtAsc()
         }
     }
 
@@ -220,5 +221,9 @@ class TaskRepositoryImplTest {
         coVerify {
             taskDao.getTaskById(1L)
         }
+    }
+
+    companion object {
+        val DEFAULT_SORT = TaskRepository.TaskSort.CREATE_DATE
     }
 }

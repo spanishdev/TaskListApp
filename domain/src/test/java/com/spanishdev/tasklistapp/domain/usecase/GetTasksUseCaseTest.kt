@@ -23,12 +23,12 @@ class GetTasksUseCaseTest {
         val repository = mockk<TaskRepository>()
         val useCase = GetTasksUseCase(repository, UnconfinedTestDispatcher())
 
-        coEvery { repository.getTasks() } returns flowOf(emptyList())
+        coEvery { repository.getTasks(DEFAULT_SORT) } returns flowOf(emptyList())
 
-        val result = useCase().first()
+        val result = useCase(DEFAULT_SORT).first()
 
         assertEquals(emptyList<Task>(), result)
-        coVerify { repository.getTasks() }
+        coVerify { repository.getTasks(DEFAULT_SORT) }
     }
 
     @Test
@@ -59,12 +59,12 @@ class GetTasksUseCaseTest {
             ),
         )
 
-        coEvery { repository.getTasks() } returns flowOf(expectedTasks)
+        coEvery { repository.getTasks(DEFAULT_SORT) } returns flowOf(expectedTasks)
 
-        val result = useCase().first()
+        val result = useCase(DEFAULT_SORT).first()
 
         assertEquals(expectedTasks, result)
-        coVerify { repository.getTasks() }
+        coVerify { repository.getTasks(DEFAULT_SORT) }
     }
 
     @Test
@@ -73,19 +73,20 @@ class GetTasksUseCaseTest {
         val useCase = GetTasksUseCase(repository, UnconfinedTestDispatcher())
         val expectedException = RuntimeException("Database error")
 
-        coEvery { repository.getTasks() } throws expectedException
+        coEvery { repository.getTasks(DEFAULT_SORT) } throws expectedException
 
         try {
-            useCase()
+            useCase(DEFAULT_SORT)
             fail("Expected RuntimeException")
         } catch (e: RuntimeException) {
             assertEquals(expectedException.message, e.message)
         }
 
-        coVerify { repository.getTasks() }
+        coVerify { repository.getTasks(DEFAULT_SORT) }
     }
 
     companion object {
         const val DEFAULT_DATE = "12-06-2025 14:23"
+        val DEFAULT_SORT = TaskRepository.TaskSort.CREATE_DATE
     }
 }
