@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
+import com.spanishdev.tasklistapp.domain.repository.TaskRepository.TaskSort
 import com.spanishdev.tasklistapp.ui.tasklist.TaskListViewModel.Event
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,6 +78,7 @@ fun TaskListScreen(
     val uiState by viewModel.state.collectAsState()
     val isRefreshingState by viewModel.isRefreshingState.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
+    val selectedTaskSort by viewModel.sortingState.collectAsState()
 
     var isInSelectableMode by remember { mutableStateOf(false) }
 
@@ -125,10 +127,10 @@ fun TaskListScreen(
         ) {
             Content(
                 state = uiState,
+                selectedTaskSort = selectedTaskSort,
                 isInSelectableMode = isInSelectableMode,
-                onTaskUpdated = { task ->
-                    viewModel.sendEvent(Event.UpdateTask(task))
-                },
+                onOrderSelected = { order -> viewModel.sendEvent(Event.OrderSelected(order)) },
+                onTaskUpdated = { task -> viewModel.sendEvent(Event.UpdateTask(task)) },
                 onTaskSelected = { taskId, selected ->
                     viewModel.sendEvent(Event.SelectTask(taskId, selected))
                 },
@@ -179,48 +181,99 @@ fun SelectionAppBar(
 fun Content(
     state: TaskListViewModel.State,
     isInSelectableMode: Boolean,
+    selectedTaskSort: TaskSort,
+    onOrderSelected: (TaskSort) -> Unit,
     onTaskUpdated: (Task) -> Unit,
     onTaskSelected: (Long, Boolean) -> Unit,
     onSelectedModeChange: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    onEditTaskNavigation: (Long) -> Unit
+    onEditTaskNavigation: (Long) -> Unit,
 ) {
-    LazyColumn(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
     ) {
-        when (state) {
-            is TaskListViewModel.State.Empty -> item {
-                EmptyView(modifier = Modifier.fillParentMaxSize())
-            }
+        SortOrderChip(
+            taskSort = selectedTaskSort,
+            onOrderSelected = onOrderSelected,
+        )
 
-            is TaskListViewModel.State.Error -> item {
-                ErrorView(
-                    message = state.message,
-                    modifier = Modifier.fillParentMaxSize()
+        when (state) {
+            is TaskListViewModel.State.Empty ->
+                EmptyView(modifier = Modifier.fillMaxSize())
+
+
+            is TaskListViewModel.State.Error -> ErrorView(
+                message = state.message,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            is TaskListViewModel.State.Loading -> LoadingView(modifier = Modifier.fillMaxSize())
+
+
+            is TaskListViewModel.State.Loaded ->
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(state.tasks) { task ->
+                        TaskItemView(
+                            task = task,
+                            isSelected = state.selected.contains(task.id),
+                            isSelectableMode = isInSelectableMode,
+                            onLongClick = onSelectedModeChange,
+                            onClick = { id, selected ->
+                                if (isInSelectableMode) {
+                                    onTaskSelected(id, selected)
+                                } else {
+                                    onEditTaskNavigation(id)
+                                }
+                            },
+                            onTaskUpdated = { newTask ->
+                                onTaskUpdated(newTask)
+                            }
+                        )
+                    }
+                }
+        }
+    }
+}
+
+@Composable
+fun SortOrderChip(
+    taskSort: TaskSort,
+    onOrderSelected: (TaskSort) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var showDropdown by remember { mutableStateOf(false) }
+    val orderText = stringResource(taskSort.toResource())
+
+    Row(modifier = modifier) {
+        FilterChip(
+            selected = true,
+            onClick = { showDropdown = true },
+            label = { Text(stringResource(taskSort.toResource())) },
+            modifier = Modifier
+                .width(150.dp)
+                .semantics {
+                    contentDescription = "Order selector: $orderText"
+                },
+            trailingIcon = {
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = "Expand"
                 )
             }
+        )
 
-            is TaskListViewModel.State.Loading -> item {
-                LoadingView(modifier = Modifier.fillParentMaxSize())
-            }
-
-            is TaskListViewModel.State.Loaded -> items(state.tasks) { task ->
-                TaskItemView(
-                    task = task,
-                    isSelected = state.selected.contains(task.id),
-                    isSelectableMode = isInSelectableMode,
-                    onLongClick = onSelectedModeChange,
-                    onClick = { id, selected ->
-                        if(isInSelectableMode) {
-                            onTaskSelected(id, selected)
-                        } else {
-                            onEditTaskNavigation(id)
-                        }
-                    },
-                    onTaskUpdated = { newTask ->
-                        onTaskUpdated(newTask)
+        DropdownMenu(
+            expanded = showDropdown,
+            onDismissRequest = { showDropdown = false }
+        ) {
+            TaskSort.entries.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(item.toResource())) },
+                    onClick = {
+                        onOrderSelected(item)
+                        showDropdown = false
                     }
                 )
             }
@@ -421,6 +474,13 @@ val Status.icon: ImageVector
         Status.Cancelled -> Icons.Default.Close
     }
 
+@StringRes
+private fun TaskSort.toResource(): Int = when (this) {
+    TaskSort.CREATE_DATE -> R.string.sort_date
+    TaskSort.NAME -> R.string.sort_name
+    TaskSort.STATUS -> R.string.sort_status
+}
+
 
 @Preview
 @Composable
@@ -470,12 +530,12 @@ fun PreviewContent() {
     val state = TaskListViewModel.State.Loaded(tasks, emptySet())
     Content(
         state = state,
+        selectedTaskSort = TaskSort.CREATE_DATE,
         isInSelectableMode = false,
         onTaskUpdated = {},
         onTaskSelected = { _, _ -> },
         onSelectedModeChange = {},
-        onEditTaskNavigation = { }
+        onEditTaskNavigation = { },
+        onOrderSelected = { _ -> }
     )
 }
-
-
