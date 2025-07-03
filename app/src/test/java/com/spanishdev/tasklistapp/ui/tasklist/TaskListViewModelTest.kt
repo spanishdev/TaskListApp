@@ -2,6 +2,7 @@ package com.spanishdev.tasklistapp.ui.tasklist
 
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
+import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import com.spanishdev.tasklistapp.domain.usecase.DeleteTasksUseCase
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 import com.spanishdev.tasklistapp.domain.usecase.UpdateTaskUseCase
@@ -54,7 +55,7 @@ class TaskListViewModelTest {
 
     @Test
     fun `WHEN initialized THEN collects Loading State`() = runTest {
-        coEvery { mockGetTasksUseCase() } returns flowOf(emptyList())
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns flowOf(emptyList())
 
         viewModel = createViewModel()
 
@@ -81,7 +82,7 @@ class TaskListViewModelTest {
             ),
         )
 
-        coEvery { mockGetTasksUseCase() } returns flowOf(tasks)
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns flowOf(tasks)
 
         viewModel = createViewModel()
 
@@ -91,7 +92,7 @@ class TaskListViewModelTest {
 
     @Test
     fun `WHEN get tasks emitted with empty list THEN collects Empty State`() = runTest {
-        coEvery { mockGetTasksUseCase() } returns flowOf(emptyList())
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns flowOf(emptyList())
 
         viewModel = createViewModel()
 
@@ -100,10 +101,70 @@ class TaskListViewModelTest {
     }
 
     @Test
+    fun `WHEN OrderSelected Event THEN changes sortingState`() = runTest {
+        val tasksByDate = listOf(
+            Task(
+                id = 1,
+                name = "Task Name",
+                description = "Description 1",
+                status = Status.InProgress,
+                createdAt = "07/06/2025"
+            ),
+            Task(
+                id = 2,
+                name = "Another Task",
+                description = "Description 2",
+                status = Status.Done,
+                createdAt = "09/06/2025"
+            ),
+        )
+
+        val tasksByName = listOf(
+            Task(
+                id = 2,
+                name = "Another Task",
+                description = "Description 2",
+                status = Status.Done,
+                createdAt = "09/06/2025"
+            ),
+            Task(
+                id = 1,
+                name = "Task Name",
+                description = "Description 1",
+                status = Status.InProgress,
+                createdAt = "07/06/2025"
+            ),
+        )
+
+        coEvery { mockGetTasksUseCase(TaskRepository.TaskSort.CREATE_DATE) } returns flowOf(tasksByDate)
+        coEvery { mockGetTasksUseCase(TaskRepository.TaskSort.NAME) } returns flowOf(tasksByName)
+
+        viewModel = createViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals(TaskRepository.TaskSort.CREATE_DATE, viewModel.sortingState.value)
+        val initialState = viewModel.state.value as State.Loaded
+        assertEquals(tasksByDate, initialState.tasks)
+        assertEquals(tasksByDate[0].name, "Task Name")
+
+        viewModel.sendEvent(Event.OrderSelected(TaskRepository.TaskSort.NAME))
+        advanceUntilIdle()
+
+        assertEquals(TaskRepository.TaskSort.NAME, viewModel.sortingState.value)
+
+        val stateAfterSort = viewModel.state.value as State.Loaded
+        assertEquals(tasksByName, stateAfterSort.tasks)
+        assertEquals(tasksByName[0].name, "Another Task")
+
+        coVerify { mockGetTasksUseCase(TaskRepository.TaskSort.NAME) }
+    }
+
+    @Test
     fun `WHEN error THEN collects Error State`() = runTest {
         val msg = "Something went wrong"
 
-        coEvery { mockGetTasksUseCase() } returns flow {
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns flow {
             throw Exception(msg)
         }
 
@@ -123,7 +184,7 @@ class TaskListViewModelTest {
             createdAt = ""
         )
 
-        coEvery { mockGetTasksUseCase() } returns flowOf(emptyList())
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns flowOf(emptyList())
         coEvery { mockUpdateTaskUseCase(any()) } returns true
 
         viewModel = createViewModel()
@@ -153,7 +214,7 @@ class TaskListViewModelTest {
             ),
         )
 
-        coEvery { mockGetTasksUseCase() } returns flowOf(tasks)
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns flowOf(tasks)
 
         viewModel = createViewModel()
         viewModel.state.drop(1).first { it is State.Loaded }
@@ -187,7 +248,7 @@ class TaskListViewModelTest {
             ),
         )
 
-        coEvery { mockGetTasksUseCase() } returns flowOf(tasks)
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns flowOf(tasks)
 
         viewModel = createViewModel(State.Loaded(tasks = tasks, selected = setOf(2L)))
 
@@ -220,7 +281,7 @@ class TaskListViewModelTest {
             ),
         )
 
-        coEvery { mockGetTasksUseCase() } returns flowOf(tasks)
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns flowOf(tasks)
 
         viewModel = createViewModel(State.Loaded(tasks = tasks, selected = setOf(1L, 2L)))
 
@@ -266,7 +327,7 @@ class TaskListViewModelTest {
         val tasksFlow = MutableSharedFlow<List<Task>>(replay = 1)
         launch { tasksFlow.emit(tasksBefore) }
 
-        coEvery { mockGetTasksUseCase() } returns tasksFlow
+        coEvery { mockGetTasksUseCase(DEFAULT_SORT) } returns tasksFlow
         coEvery { mockDeleteTasksUseCase(any()) } returns true
 
         viewModel = createViewModel(State.Loaded(tasks = tasksBefore, selected = setOf(2L)))
@@ -294,4 +355,8 @@ class TaskListViewModelTest {
         getTasksUseCase = mockGetTasksUseCase,
         initialState = initialState,
     )
+
+    companion object {
+        val DEFAULT_SORT = TaskRepository.TaskSort.CREATE_DATE
+    }
 }

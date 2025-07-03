@@ -3,6 +3,7 @@ package com.spanishdev.tasklistapp.data
 import com.spanishdev.tasklistapp.database.dao.TaskDao
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
+import com.spanishdev.tasklistapp.domain.repository.TaskRepository.TaskSort
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -29,10 +30,17 @@ class TaskRepositoryImpl @Inject constructor(
         return rowsAffected > 0
     }
 
-    override fun getTasks(): Flow<List<Task>> =
-        taskDao.getAllTasks().map { entities ->
+    override fun getTasks(sorting: TaskSort): Flow<List<Task>> {
+        val getTasksByOrder = when(sorting) {
+            TaskSort.CREATE_DATE -> taskDao.getAllTasksByCreatedAtAsc()
+            TaskSort.NAME -> taskDao.getAllTasksByName()
+            TaskSort.STATUS -> taskDao.getAllTasksByStatus()
+        }
+
+        return getTasksByOrder.map { entities ->
             entities.mapNotNull(taskMapper::toDomain)
         }.flowOn(dispatcher)
+    }
 
     override suspend fun getTaskById(id: Long): Task? =
         taskMapper.toDomain(taskDao.getTaskById(id))
