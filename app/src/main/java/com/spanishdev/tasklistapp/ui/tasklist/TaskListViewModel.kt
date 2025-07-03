@@ -4,10 +4,12 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spanishdev.tasklistapp.domain.model.Task
+import com.spanishdev.tasklistapp.domain.repository.TaskRepository.TaskSort
 import com.spanishdev.tasklistapp.domain.usecase.DeleteTasksUseCase
 import com.spanishdev.tasklistapp.domain.usecase.GetTasksUseCase
 import com.spanishdev.tasklistapp.domain.usecase.UpdateTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +31,11 @@ class TaskListViewModel @Inject constructor(
 
     private val _isRefreshingState = MutableStateFlow(false)
     val isRefreshingState: StateFlow<Boolean> = _isRefreshingState.asStateFlow()
+
+    private val _sortingState = MutableStateFlow(TaskSort.CREATE_DATE)
+    val sortingState: StateFlow<TaskSort> = _sortingState.asStateFlow()
+
+    private var observeTasksJob: Job? = null
 
     constructor(
         getTasksUseCase: GetTasksUseCase,
@@ -59,6 +66,7 @@ class TaskListViewModel @Inject constructor(
         data object ClearSelection : Event()
         data object DeleteSelectedTasks : Event()
         data object Refresh : Event()
+        data class OrderSelected(val sorting: TaskSort) : Event()
     }
 
     init {
@@ -66,8 +74,10 @@ class TaskListViewModel @Inject constructor(
     }
 
     private fun observeTasks() {
-        viewModelScope.launch {
-            getTasksUseCase()
+        observeTasksJob?.cancel()
+
+        observeTasksJob = viewModelScope.launch {
+            getTasksUseCase(sortingState.value)
                 .catch { error ->
                     _state.value = State.Error(error.message ?: "Unknown error")
                     _isRefreshingState.value = false
@@ -94,6 +104,12 @@ class TaskListViewModel @Inject constructor(
         is Event.DeleteSelectedTasks -> deleteSelectedTasks()
         is Event.SelectTask -> handleSelectTask(event.taskId, event.selected)
         is Event.ClearSelection -> handleSelectionClear()
+        is Event.OrderSelected -> handleOrderSelcted(event.sorting)
+    }
+
+    private fun handleOrderSelcted(sorting: TaskSort) {
+        _sortingState.update { sorting }
+        observeTasks()
     }
 
     private fun refreshTasks() {
