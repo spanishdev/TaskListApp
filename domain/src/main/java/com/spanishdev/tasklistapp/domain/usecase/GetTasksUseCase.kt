@@ -11,6 +11,7 @@ class GetTasksUseCase(
     private val repository: TaskRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    operator fun invoke(): Flow<List<Task>> = repository.getTasks()
-        .flowOn(dispatcher)
+    operator fun invoke(sorting: TaskRepository.TaskSort): Flow<List<Task>> =
+        repository.getTasks(sorting)
+            .flowOn(dispatcher)
 }
