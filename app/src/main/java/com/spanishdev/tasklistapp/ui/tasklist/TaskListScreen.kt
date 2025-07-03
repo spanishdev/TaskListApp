@@ -71,6 +71,7 @@ import com.spanishdev.tasklistapp.ui.tasklist.TaskListViewModel.Event
 fun TaskListScreen(
     viewModel: TaskListViewModel,
     onAddTaskNavigation: () -> Unit,
+    onEditTaskNavigation: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.state.collectAsState()
@@ -136,7 +137,8 @@ fun TaskListScreen(
                         isInSelectableMode = true
                         viewModel.sendEvent(Event.SelectTask(taskId, true))
                     }
-                }
+                },
+                onEditTaskNavigation = onEditTaskNavigation,
             )
         }
     }
@@ -180,7 +182,8 @@ fun Content(
     onTaskUpdated: (Task) -> Unit,
     onTaskSelected: (Long, Boolean) -> Unit,
     onSelectedModeChange: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditTaskNavigation: (Long) -> Unit
 ) {
     LazyColumn(
         modifier = modifier
@@ -209,7 +212,13 @@ fun Content(
                     isSelected = state.selected.contains(task.id),
                     isSelectableMode = isInSelectableMode,
                     onLongClick = onSelectedModeChange,
-                    onClick = { id, selected -> onTaskSelected(id, selected) },
+                    onClick = { id, selected ->
+                        if(isInSelectableMode) {
+                            onTaskSelected(id, selected)
+                        } else {
+                            onEditTaskNavigation(id)
+                        }
+                    },
                     onTaskUpdated = { newTask ->
                         onTaskUpdated(newTask)
                     }
@@ -464,7 +473,8 @@ fun PreviewContent() {
         isInSelectableMode = false,
         onTaskUpdated = {},
         onTaskSelected = { _, _ -> },
-        onSelectedModeChange = {}
+        onSelectedModeChange = {},
+        onEditTaskNavigation = { }
     )
 }
 

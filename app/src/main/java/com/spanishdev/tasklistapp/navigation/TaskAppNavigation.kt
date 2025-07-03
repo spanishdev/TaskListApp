@@ -5,8 +5,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.composable
-import com.spanishdev.tasklistapp.ui.addtask.AddTaskScreen
-import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel
+import androidx.navigation.toRoute
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormScreen
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormViewModel
 import com.spanishdev.tasklistapp.ui.tasklist.TaskListScreen
 import com.spanishdev.tasklistapp.ui.tasklist.TaskListViewModel
 
@@ -25,14 +26,31 @@ fun TaskAppNavigation() {
                 viewModel = viewModel,
                 onAddTaskNavigation = {
                     navController.navigate(AppRoutes.AddTask)
+                },
+                onEditTaskNavigation = { taskId ->
+                    navController.navigate(AppRoutes.EditTask(taskId))
                 }
             )
         }
 
         composable<AppRoutes.AddTask> {
-            val viewModel = hiltViewModel<AddTaskViewModel>()
+            val viewModel = hiltViewModel<TaskFormViewModel>()
 
-            AddTaskScreen(
+            TaskFormScreen(
+                viewModel = viewModel,
+                onBackNavigation = {
+                    navController.popBackStack()
+                },
+                onSuccessNavigation = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable<AppRoutes.EditTask> {
+            val viewModel = hiltViewModel<TaskFormViewModel>()
+
+            TaskFormScreen(
                 viewModel = viewModel,
                 onBackNavigation = {
                     navController.popBackStack()

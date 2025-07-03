@@ -1,21 +1,41 @@
-package com.spanishdev.tasklistapp.ui.addtask
+package com.spanishdev.tasklistapp.ui.taskform
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.usecase.AddTaskUseCase
+import com.spanishdev.tasklistapp.domain.usecase.GetTaskByIdUseCase
+import com.spanishdev.tasklistapp.domain.usecase.UpdateTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AddTaskViewModel @Inject constructor(
-    private val addTaskUseCase: AddTaskUseCase
+class TaskFormViewModel @Inject constructor(
+    private val addTaskUseCase: AddTaskUseCase,
+    private val getTaskByIdUseCase: GetTaskByIdUseCase,
+    private val updateTaskUseCase: UpdateTaskUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(State())
+    val state: StateFlow<State> = _uiState.asStateFlow()
+
+    private val _navigationEvents = MutableSharedFlow<NavigationEvent>()
+    val navigationEvents = _navigationEvents.asSharedFlow()
+
+    private val _task = MutableStateFlow<Task?>(null)
+
+    private val taskId: Long? = savedStateHandle.get<Long>("taskId")
+
+    val isInEditMode: Boolean = taskId != null
 
     data class State(
         val name: String = "",
@@ -35,22 +55,52 @@ class AddTaskViewModel @Inject constructor(
     sealed class Event {
         data class NameChanged(val text: String) : Event()
         data class DescriptionChanged(val text: String) : Event()
-        data object CreateTask : Event()
+        data object SubmitForm : Event()
         data object ClearError : Event()
     }
 
     sealed class NavigationEvent {
-        data object TaskAddedSuccessfully : NavigationEvent()
+        data object TaskSavedSuccessfully : NavigationEvent()
+        data object GoBack : NavigationEvent()
     }
 
-    private val _uiState = MutableStateFlow(State())
-    val state: StateFlow<State> = _uiState.asStateFlow()
+    init {
+        if (isInEditMode) {
+            loadTask()
+        }
+    }
 
-    private val _navigationEvents = MutableSharedFlow<NavigationEvent>()
-    val navigationEvents = _navigationEvents.asSharedFlow()
+    private fun loadTask() {
+        viewModelScope.launch {
+            taskId?.let { id ->
+                try {
+                    _task.update {
+                        val task = getTaskByIdUseCase(id)
+                        if (task == null) {
+                            _uiState.update {
+                                it.copy(error = Error.GenericError("Task not found"))
+                            }
+                            _navigationEvents.emit(NavigationEvent.GoBack)
+                            return@launch
+                        }
+
+                        _uiState.update {
+                            it.copy(name = task.name, description = task.description)
+                        }
+                        task
+                    }
+                } catch (e: Exception) {
+                    _uiState.update {
+                        it.copy(error = Error.GenericError(e.message ?: "Unknown error"))
+                    }
+                    _navigationEvents.emit(NavigationEvent.GoBack)
+                }
+            }
+        }
+    }
 
     fun sendEvent(event: Event) = when (event) {
-        is Event.CreateTask -> addTask()
+        is Event.SubmitForm -> submitForm()
         is Event.ClearError -> _uiState.value = _uiState.value.copy(error = null)
 
         is Event.DescriptionChanged -> {
@@ -68,14 +118,25 @@ class AddTaskViewModel @Inject constructor(
         }
     }
 
-    private fun addTask() {
+    private fun submitForm() {
         viewModelScope.launch {
             if (_uiState.value.isLoading) return@launch
 
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             try {
-                addTaskUseCase(state.value.name, state.value.description)
+                if (isInEditMode) {
+                    _task.value?.let {
+                        updateTaskUseCase(
+                            it.copy(
+                                name = state.value.name,
+                                description = state.value.description,
+                            )
+                        )
+                    }
+                } else {
+                    addTaskUseCase(state.value.name, state.value.description)
+                }
                 finishAndReturn()
             } catch (e: AddTaskUseCase.InvalidTaskNameException) {
                 _uiState.value = _uiState.value.copy(error = Error.InvalidName(e.message))
@@ -91,7 +152,7 @@ class AddTaskViewModel @Inject constructor(
     }
 
     private suspend fun finishAndReturn() {
-        _navigationEvents.emit(NavigationEvent.TaskAddedSuccessfully)
+        _navigationEvents.emit(NavigationEvent.TaskSavedSuccessfully)
     }
 
     private inline fun <reified T : Error> State.clearErrorIfType(): State {

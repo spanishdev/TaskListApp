@@ -1,4 +1,4 @@
-package com.spanishdev.tasklistapp.ui.addtask
+package com.spanishdev.tasklistapp.ui.taskform
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -40,25 +40,30 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.spanishdev.tasklistapp.R
-import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel.Event
-import com.spanishdev.tasklistapp.ui.addtask.AddTaskViewModel.Error
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormViewModel.Event
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormViewModel.Error
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(
-    viewModel: AddTaskViewModel,
+fun TaskFormScreen(
+    viewModel: TaskFormViewModel,
     onBackNavigation: () -> Unit,
     onSuccessNavigation: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
+    val isInEditMode = viewModel.isInEditMode
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvents.collect { event ->
             when (event) {
-                AddTaskViewModel.NavigationEvent.TaskAddedSuccessfully -> {
+                TaskFormViewModel.NavigationEvent.TaskSavedSuccessfully -> {
                     onSuccessNavigation()
+                }
+
+                TaskFormViewModel.NavigationEvent.GoBack -> {
+                    onBackNavigation()
                 }
             }
         }
@@ -83,7 +88,17 @@ fun AddTaskScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.add_task_title)) },
+                title = {
+                    Text(
+                        stringResource(
+                            if (isInEditMode) {
+                                R.string.edit_task
+                            } else {
+                                R.string.add_task_title
+                            }
+                        )
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { onBackNavigation() }) {
                         Icon(
@@ -94,7 +109,7 @@ fun AddTaskScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = { viewModel.sendEvent(Event.CreateTask) },
+                        onClick = { viewModel.sendEvent(Event.SubmitForm) },
                         enabled = true //For accessibility is better to keep this enabled
                     ) {
                         Icon(
@@ -111,6 +126,7 @@ fun AddTaskScreen(
     ) { paddingValues ->
         Content(
             state = state,
+            isInEditMode = isInEditMode,
             sendEvent = { event -> viewModel.sendEvent(event) },
             modifier = modifier
                 .fillMaxSize()
@@ -121,7 +137,8 @@ fun AddTaskScreen(
 
 @Composable
 private fun Content(
-    state: AddTaskViewModel.State,
+    state: TaskFormViewModel.State,
+    isInEditMode: Boolean,
     sendEvent: (Event) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -139,8 +156,8 @@ private fun Content(
             onValueChange = {
                 sendEvent(Event.NameChanged(it))
             },
-            label = { Text(text = stringResource(R.string.add_task_name_label)) },
-            placeholder = { Text(text = stringResource(R.string.add_task_name_hint)) },
+            label = { Text(text = stringResource(R.string.task_name_label)) },
+            placeholder = { Text(text = stringResource(R.string.task_name_hint)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
@@ -156,15 +173,15 @@ private fun Content(
             onValueChange = {
                 sendEvent(Event.DescriptionChanged(it))
             },
-            label = { Text(text = stringResource(R.string.add_task_description_label)) },
-            placeholder = { Text(text = stringResource(R.string.add_task_description_hint)) },
+            label = { Text(text = stringResource(R.string.task_description_label)) },
+            placeholder = { Text(text = stringResource(R.string.task_description_hint)) },
             singleLine = false,
             maxLines = 4,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onDone = {
                     keyboardController?.hide()
-                    sendEvent(Event.CreateTask)
+                    sendEvent(Event.SubmitForm)
                 }
             ),
             isError = state.error is Error.InvalidDescription,
@@ -178,7 +195,7 @@ private fun Content(
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = { sendEvent(Event.CreateTask) },
+            onClick = { sendEvent(Event.SubmitForm) },
             enabled = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -191,7 +208,15 @@ private fun Content(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text(stringResource(R.string.add_task_button))
+                Text(
+                    stringResource(
+                        if (isInEditMode) {
+                            R.string.edit_task
+                        } else {
+                            R.string.add_task_button
+                        }
+                    )
+                )
             }
         }
     }
@@ -199,9 +224,10 @@ private fun Content(
 
 @Preview
 @Composable
-fun PreviewAddTask() {
+fun PreviewTaskForm() {
     Content(
-        state = AddTaskViewModel.State(),
+        state = TaskFormViewModel.State(),
+        isInEditMode = false,
         sendEvent = {}
     )
 }
