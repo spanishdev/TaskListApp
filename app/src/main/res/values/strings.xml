@@ -17,4 +17,9 @@
     <string name="status_pending">Pending</string>
     <string name="status_in_progress">In progress</string>
 
+    <!-- Status !-->
+    <string name="sort_date">By date</string>
+    <string name="sort_name">By name</string>
+    <string name="sort_status">By status</string>
+
 </resources>
