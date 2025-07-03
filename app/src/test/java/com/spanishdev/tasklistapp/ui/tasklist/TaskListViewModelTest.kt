@@ -101,6 +101,66 @@ class TaskListViewModelTest {
     }
 
     @Test
+    fun `WHEN OrderSelected Event THEN changes sortingState`() = runTest {
+        val tasksByDate = listOf(
+            Task(
+                id = 1,
+                name = "Task Name",
+                description = "Description 1",
+                status = Status.InProgress,
+                createdAt = "07/06/2025"
+            ),
+            Task(
+                id = 2,
+                name = "Another Task",
+                description = "Description 2",
+                status = Status.Done,
+                createdAt = "09/06/2025"
+            ),
+        )
+
+        val tasksByName = listOf(
+            Task(
+                id = 2,
+                name = "Another Task",
+                description = "Description 2",
+                status = Status.Done,
+                createdAt = "09/06/2025"
+            ),
+            Task(
+                id = 1,
+                name = "Task Name",
+                description = "Description 1",
+                status = Status.InProgress,
+                createdAt = "07/06/2025"
+            ),
+        )
+
+        coEvery { mockGetTasksUseCase(TaskRepository.TaskSort.CREATE_DATE) } returns flowOf(tasksByDate)
+        coEvery { mockGetTasksUseCase(TaskRepository.TaskSort.NAME) } returns flowOf(tasksByName)
+
+        viewModel = createViewModel()
+
+        advanceUntilIdle()
+
+        assertEquals(TaskRepository.TaskSort.CREATE_DATE, viewModel.sortingState.value)
+        val initialState = viewModel.state.value as State.Loaded
+        assertEquals(tasksByDate, initialState.tasks)
+        assertEquals(tasksByDate[0].name, "Task Name")
+
+        viewModel.sendEvent(Event.OrderSelected(TaskRepository.TaskSort.NAME))
+        advanceUntilIdle()
+
+        assertEquals(TaskRepository.TaskSort.NAME, viewModel.sortingState.value)
+
+        val stateAfterSort = viewModel.state.value as State.Loaded
+        assertEquals(tasksByName, stateAfterSort.tasks)
+        assertEquals(tasksByName[0].name, "Another Task")
+
+        coVerify { mockGetTasksUseCase(TaskRepository.TaskSort.NAME) }
+    }
+
+    @Test
     fun `WHEN error THEN collects Error State`() = runTest {
         val msg = "Something went wrong"
 
