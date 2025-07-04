@@ -35,11 +35,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.spanishdev.tasklistapp.R
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormScreenTestTag.BACK_BUTTON
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormScreenTestTag.DESCRIPTION_TEXT
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormScreenTestTag.DONE_BUTTON
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormScreenTestTag.MAIN_BUTTON
+import com.spanishdev.tasklistapp.ui.taskform.TaskFormScreenTestTag.NAME_TEXT
 import com.spanishdev.tasklistapp.ui.taskform.TaskFormViewModel.Event
 import com.spanishdev.tasklistapp.ui.taskform.TaskFormViewModel.Error
 
@@ -100,17 +106,22 @@ fun TaskFormScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onBackNavigation() }) {
+                    IconButton(
+                        onClick = { onBackNavigation() },
+                        modifier = Modifier.testTag(BACK_BUTTON)
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
+
                 },
                 actions = {
                     IconButton(
                         onClick = { viewModel.sendEvent(Event.SubmitForm) },
-                        enabled = true //For accessibility is better to keep this enabled
+                        enabled = true, //For accessibility is better to keep this enabled
+                        modifier = Modifier.testTag(DONE_BUTTON),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
@@ -165,7 +176,9 @@ private fun Content(
             ),
             isError = state.error is Error.InvalidName,
             supportingText = (state.error as? Error.InvalidName)?.let { { Text(text = it.message) } },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(NAME_TEXT)
         )
 
         OutlinedTextField(
@@ -190,6 +203,7 @@ private fun Content(
                 .fillMaxWidth()
                 .height(120.dp)
                 .focusRequester(descriptionFocusRequester)
+                .testTag(DESCRIPTION_TEXT)
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -200,6 +214,7 @@ private fun Content(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
+                .testTag(MAIN_BUTTON)
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(
@@ -230,6 +245,14 @@ fun PreviewTaskForm() {
         isInEditMode = false,
         sendEvent = {}
     )
+}
+
+object TaskFormScreenTestTag {
+    const val NAME_TEXT = "TaskForm_NameText"
+    const val DESCRIPTION_TEXT = "TaskForm_DescriptionText"
+    const val MAIN_BUTTON = "TaskForm_MainButton"
+    const val BACK_BUTTON = "TaskForm_BackButton"
+    const val DONE_BUTTON = "TaskForm_DoneButton"
 }
 
 
