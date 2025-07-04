@@ -22,7 +22,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.spanishdev.tasklistapp.CustomHiltTestRunner"
     }
 
     buildTypes {
@@ -44,6 +44,12 @@ android {
     buildFeatures {
         compose = true
     }
+//
+//    sourceSets {
+//        getByName("androidTest") {
+//            manifest.srcFile("src/androidTest/AndroidManifest.xml")
+//        }
+//    }
 }
 
 dependencies {
@@ -92,6 +98,11 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    // Hilt Testing
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
+//    kspAndroidTest(libs.hilt.android.compiler)
 
     //Debug
     debugImplementation(libs.androidx.ui.tooling)
