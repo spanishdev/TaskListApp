@@ -1,6 +1,5 @@
 package com.spanishdev.tasklistapp.ui.taskform
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -36,10 +35,10 @@ class TaskFormScreenRobot(private val composeTestRule: ComposeTestRule) {
     }
 
     fun assertName(text: String) = apply {
-        composeTestRule.onNodeWithTag(NAME_TEXT).assertTextEquals(text)
+        composeTestRule.onNodeWithTag(NAME_TEXT, useUnmergedTree = true).assertTextEquals(text)
     }
 
     fun assertDescription(text: String) = apply {
-        composeTestRule.onNodeWithTag(DESCRIPTION_TEXT).assertTextEquals(text)
+        composeTestRule.onNodeWithTag(DESCRIPTION_TEXT, useUnmergedTree = true).assertTextEquals(text)
     }
 }
