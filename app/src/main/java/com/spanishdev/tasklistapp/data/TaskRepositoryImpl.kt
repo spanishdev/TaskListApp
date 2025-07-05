@@ -68,6 +68,6 @@ class TaskRepositoryImpl @Inject constructor(
 
 
     companion object {
-        const val PAGE_SIZE = 10
+        const val PAGE_SIZE = 3
     }
 }

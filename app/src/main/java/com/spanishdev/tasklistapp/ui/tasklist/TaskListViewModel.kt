@@ -83,21 +83,18 @@ class TaskListViewModel @Inject constructor(
 
         observeTasksJob = viewModelScope.launch {
             _sortingState.collectLatest { sorting ->
-                getTasksUseCase(sorting)
+                val flow = getTasksUseCase(sorting)
                     .cachedIn(viewModelScope)
                     .catch { error ->
                         _state.value = State.Error(error.message ?: "Unknown error")
                         _isRefreshingState.value = false
                     }
-                    .collect { pagingData ->
-                        val currentSelected = (state.value as? State.Loaded)?.selected ?: emptySet()
 
-                        _state.value = State.Loaded(
-                            tasks = flowOf(pagingData),
-                            selected = currentSelected
-                        )
-                        _isRefreshingState.value = false
-                    }
+                _state.value = State.Loaded(
+                    tasks = flow,
+                    selected = (state.value as? State.Loaded)?.selected ?: emptySet()
+                )
+                _isRefreshingState.value = false
             }
         }
     }

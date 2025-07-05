@@ -38,6 +38,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -84,6 +87,7 @@ fun TaskListScreen(
     val isRefreshingState by viewModel.isRefreshingState.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
     val selectedTaskSort by viewModel.sortingState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var isInSelectableMode by remember { mutableStateOf(false) }
 
@@ -114,6 +118,9 @@ fun TaskListScreen(
                 )
             }
         },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        }
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = isRefreshingState,
@@ -146,6 +153,7 @@ fun TaskListScreen(
                     }
                 },
                 onEditTaskNavigation = onEditTaskNavigation,
+                snackbarHostState = snackbarHostState,
             )
         }
     }
@@ -193,6 +201,7 @@ fun Content(
     onTaskSelected: (Long, Boolean) -> Unit,
     onSelectedModeChange: (Long) -> Unit,
     onEditTaskNavigation: (Long) -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -227,30 +236,9 @@ fun Content(
                     onSelectedModeChange = onSelectedModeChange,
                     onEditTaskNavigation = onEditTaskNavigation,
                     onTaskUpdated = onTaskUpdated,
+                    snackbarHostState = snackbarHostState,
                     modifier = Modifier.fillMaxSize()
                 )
-
-            //TODO: Delete
-//            LazyColumn(modifier = Modifier.fillMaxSize()) {
-//                items(state.tasks) { task ->
-//                    TaskItemView(
-//                        task = task,
-//                        isSelected = state.selected.contains(task.id),
-//                        isSelectableMode = isInSelectableMode,
-//                        onLongClick = onSelectedModeChange,
-//                        onClick = { id, selected ->
-//                            if (isInSelectableMode) {
-//                                onTaskSelected(id, selected)
-//                            } else {
-//                                onEditTaskNavigation(id)
-//                            }
-//                        },
-//                        onTaskUpdated = { newTask ->
-//                            onTaskUpdated(newTask)
-//                        }
-//                    )
-//                }
-//            }
         }
     }
 }
@@ -349,10 +337,27 @@ fun TaskListPaginated(
     onSelectedModeChange: (Long) -> Unit,
     onEditTaskNavigation: (Long) -> Unit,
     onTaskUpdated: (Task) -> Unit,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
 
     val lazyPagingItems = pagingData.collectAsLazyPagingItems()
+    val refreshError = lazyPagingItems.loadState.refresh as? LoadState.Error
+    val appendError = lazyPagingItems.loadState.append as? LoadState.Error
+
+    val error = refreshError?.error ?: appendError?.error
+
+    error?.let {
+        LaunchedEffect(it) {
+            snackbarHostState.showSnackbar(
+                message = "Error loading items",
+                actionLabel = "Error",
+                duration = SnackbarDuration.Long,
+                withDismissAction = true
+            )
+        }
+    }
+
 
     LazyColumn(modifier = modifier) {
         items(
@@ -378,7 +383,6 @@ fun TaskListPaginated(
             }
         }
 
-        // Manejar estados de loading y error de paginación
         lazyPagingItems.apply {
             when {
                 loadState.refresh is LoadState.Loading -> {
@@ -406,31 +410,12 @@ fun TaskListPaginated(
                         }
                     }
                 }
-
-                loadState.refresh is LoadState.Error -> {
-                    val error = loadState.refresh as LoadState.Error
-                    item {
-//                        ErrorItem(
-//                            message = error.error.localizedMessage ?: "Unknown error",
-//                            onRetry = { retry() }
-//                        )
-                    }
-                }
-
-                loadState.append is LoadState.Error -> {
-                    val error = loadState.append as LoadState.Error
-                    item {
-//                        ErrorItem(
-//                            message = error.error.localizedMessage ?: "Error loading more",
-//                            onRetry = { retry() }
-//                        )
-                    }
-                }
             }
         }
 
         if (lazyPagingItems.loadState.refresh is LoadState.NotLoading &&
-            lazyPagingItems.itemCount == 0) {
+            lazyPagingItems.itemCount == 0
+        ) {
             item {
                 EmptyView(modifier = Modifier.fillMaxSize())
             }
@@ -653,6 +638,7 @@ fun PreviewContent() {
         onTaskSelected = { _, _ -> },
         onSelectedModeChange = {},
         onEditTaskNavigation = { },
-        onOrderSelected = { _ -> }
+        onOrderSelected = { _ -> },
+        snackbarHostState = SnackbarHostState(),
     )
 }
