@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -61,6 +61,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.PagingData
 import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
@@ -177,6 +178,7 @@ fun SelectionAppBar(
     )
 }
 
+
 @Composable
 fun Content(
     state: TaskListViewModel.State,
@@ -186,8 +188,8 @@ fun Content(
     onTaskUpdated: (Task) -> Unit,
     onTaskSelected: (Long, Boolean) -> Unit,
     onSelectedModeChange: (Long) -> Unit,
-    modifier: Modifier = Modifier,
     onEditTaskNavigation: (Long) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
@@ -213,26 +215,38 @@ fun Content(
 
 
             is TaskListViewModel.State.Loaded ->
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.tasks) { task ->
-                        TaskItemView(
-                            task = task,
-                            isSelected = state.selected.contains(task.id),
-                            isSelectableMode = isInSelectableMode,
-                            onLongClick = onSelectedModeChange,
-                            onClick = { id, selected ->
-                                if (isInSelectableMode) {
-                                    onTaskSelected(id, selected)
-                                } else {
-                                    onEditTaskNavigation(id)
-                                }
-                            },
-                            onTaskUpdated = { newTask ->
-                                onTaskUpdated(newTask)
-                            }
-                        )
-                    }
-                }
+                TaskListPaginated(
+                    pagingData = state.tasks,
+                    selectedTasks = state.selected,
+                    isInSelectableMode = isInSelectableMode,
+                    onTaskSelected = onTaskSelected,
+                    onSelectedModeChange = onSelectedModeChange,
+                    onEditTaskNavigation = onEditTaskNavigation,
+                    onTaskUpdated = onTaskUpdated,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+            //TODO: Delete
+//            LazyColumn(modifier = Modifier.fillMaxSize()) {
+//                items(state.tasks) { task ->
+//                    TaskItemView(
+//                        task = task,
+//                        isSelected = state.selected.contains(task.id),
+//                        isSelectableMode = isInSelectableMode,
+//                        onLongClick = onSelectedModeChange,
+//                        onClick = { id, selected ->
+//                            if (isInSelectableMode) {
+//                                onTaskSelected(id, selected)
+//                            } else {
+//                                onEditTaskNavigation(id)
+//                            }
+//                        },
+//                        onTaskUpdated = { newTask ->
+//                            onTaskUpdated(newTask)
+//                        }
+//                    )
+//                }
+//            }
         }
     }
 }
@@ -321,6 +335,103 @@ fun ErrorView(
     }
 }
 
+
+@Composable
+fun TaskListPaginated(
+    pagingData: PagingData<Task>,
+    selectedTasks: Set<Long>,
+    isInSelectableMode: Boolean,
+    onTaskSelected: (Long, Boolean) -> Unit,
+    onSelectedModeChange: (Long) -> Unit,
+    onEditTaskNavigation: (Long) -> Unit,
+    onTaskUpdated: (Task) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val lazyPagingItems = pagingData.collectAsLazyPagingItems()
+
+    LazyColumn(modifier = modifier) {
+        items(
+            count = lazyPagingItems.itemCount,
+            key = lazyPagingItems.itemKey { it.id }
+        ) { index ->
+            val task = lazyPagingItems[index]
+            if (task != null) {
+                TaskItemView(
+                    task = task,
+                    isSelected = selectedTasks.contains(task.id),
+                    isSelectableMode = isInSelectableMode,
+                    onLongClick = onSelectedModeChange,
+                    onClick = { id, selected ->
+                        if (isInSelectableMode) {
+                            onTaskSelected(id, selected)
+                        } else {
+                            onEditTaskNavigation(id)
+                        }
+                    },
+                    onTaskUpdated = onTaskUpdated
+                )
+            }
+        }
+
+        // Manejar estados de loading y error de paginación
+        lazyPagingItems.apply {
+            when {
+                loadState.refresh is LoadState.Loading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+
+                loadState.append is LoadState.Loading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.width(24.dp))
+                        }
+                    }
+                }
+
+                loadState.refresh is LoadState.Error -> {
+                    val error = loadState.refresh as LoadState.Error
+                    item {
+                        ErrorItem(
+                            message = error.error.localizedMessage ?: "Unknown error",
+                            onRetry = { retry() }
+                        )
+                    }
+                }
+
+                loadState.append is LoadState.Error -> {
+                    val error = loadState.append as LoadState.Error
+                    item {
+                        ErrorItem(
+                            message = error.error.localizedMessage ?: "Error loading more",
+                            onRetry = { retry() }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (lazyPagingItems.loadState.refresh is LoadState.NotLoading &&
+            lazyPagingItems.itemCount == 0) {
+            item {
+                EmptyView(modifier = Modifier.fillMaxSize())
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

@@ -3,6 +3,8 @@ package com.spanishdev.tasklistapp.ui.tasklist
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository.TaskSort
 import com.spanishdev.tasklistapp.domain.usecase.DeleteTasksUseCase
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -52,7 +55,7 @@ class TaskListViewModel @Inject constructor(
         data object Loading : State()
         data object Empty : State()
         data class Loaded(
-            val tasks: List<Task>,
+            val tasks: PagingData<Task>,
             val selected: Set<Long>,
         ) : State()
 
@@ -77,24 +80,23 @@ class TaskListViewModel @Inject constructor(
         observeTasksJob?.cancel()
 
         observeTasksJob = viewModelScope.launch {
-            getTasksUseCase(sortingState.value)
-                .catch { error ->
-                    _state.value = State.Error(error.message ?: "Unknown error")
-                    _isRefreshingState.value = false
-                }
-                .collect { tasks ->
-                    val currentSelected = (state.value as? State.Loaded)?.selected ?: emptySet()
-                    val filteredSelected = currentSelected.filter { id ->
-                        tasks.any { it.id == id }
-                    }.toSet()
-
-                    _state.value = if (tasks.isEmpty()) {
-                        State.Empty
-                    } else {
-                        State.Loaded(tasks, filteredSelected)
+            _sortingState.collectLatest { sorting ->
+                getTasksUseCase(sorting)
+                    .cachedIn(viewModelScope)
+                    .catch { error ->
+                        _state.value = State.Error(error.message ?: "Unknown error")
+                        _isRefreshingState.value = false
                     }
-                    _isRefreshingState.value = false
-                }
+                    .collect { pagingData ->
+                        val currentSelected = (state.value as? State.Loaded)?.selected ?: emptySet()
+
+                        _state.value = State.Loaded(
+                            tasks = pagingData,
+                            selected = currentSelected
+                        )
+                        _isRefreshingState.value = false
+                    }
+            }
         }
     }
 
