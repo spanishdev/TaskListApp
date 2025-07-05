@@ -13,11 +13,13 @@ import com.spanishdev.tasklistapp.domain.usecase.UpdateTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -55,7 +57,7 @@ class TaskListViewModel @Inject constructor(
         data object Loading : State()
         data object Empty : State()
         data class Loaded(
-            val tasks: PagingData<Task>,
+            val tasks: Flow<PagingData<Task>>,
             val selected: Set<Long>,
         ) : State()
 
@@ -91,7 +93,7 @@ class TaskListViewModel @Inject constructor(
                         val currentSelected = (state.value as? State.Loaded)?.selected ?: emptySet()
 
                         _state.value = State.Loaded(
-                            tasks = pagingData,
+                            tasks = flowOf(pagingData),
                             selected = currentSelected
                         )
                         _isRefreshingState.value = false

@@ -61,12 +61,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
 import androidx.paging.PagingData
+import androidx.paging.compose.itemKey
 import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository.TaskSort
 import com.spanishdev.tasklistapp.ui.tasklist.TaskListViewModel.Event
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -338,7 +342,7 @@ fun ErrorView(
 
 @Composable
 fun TaskListPaginated(
-    pagingData: PagingData<Task>,
+    pagingData: Flow<PagingData<Task>>,
     selectedTasks: Set<Long>,
     isInSelectableMode: Boolean,
     onTaskSelected: (Long, Boolean) -> Unit,
@@ -347,6 +351,7 @@ fun TaskListPaginated(
     onTaskUpdated: (Task) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+
     val lazyPagingItems = pagingData.collectAsLazyPagingItems()
 
     LazyColumn(modifier = modifier) {
@@ -405,20 +410,20 @@ fun TaskListPaginated(
                 loadState.refresh is LoadState.Error -> {
                     val error = loadState.refresh as LoadState.Error
                     item {
-                        ErrorItem(
-                            message = error.error.localizedMessage ?: "Unknown error",
-                            onRetry = { retry() }
-                        )
+//                        ErrorItem(
+//                            message = error.error.localizedMessage ?: "Unknown error",
+//                            onRetry = { retry() }
+//                        )
                     }
                 }
 
                 loadState.append is LoadState.Error -> {
                     val error = loadState.append as LoadState.Error
                     item {
-                        ErrorItem(
-                            message = error.error.localizedMessage ?: "Error loading more",
-                            onRetry = { retry() }
-                        )
+//                        ErrorItem(
+//                            message = error.error.localizedMessage ?: "Error loading more",
+//                            onRetry = { retry() }
+//                        )
                     }
                 }
             }
@@ -638,7 +643,8 @@ fun PreviewContent() {
             createdAt = "19-06-2025 22:00"
         ),
     )
-    val state = TaskListViewModel.State.Loaded(tasks, emptySet())
+    val pagingData = PagingData.from(tasks)
+    val state = TaskListViewModel.State.Loaded(flowOf(pagingData), emptySet())
     Content(
         state = state,
         selectedTaskSort = TaskSort.CREATE_DATE,
