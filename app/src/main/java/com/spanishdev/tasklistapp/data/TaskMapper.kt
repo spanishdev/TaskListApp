@@ -17,15 +17,15 @@ class TaskMapper @Inject constructor(private val dateFormat: DateFormat) {
         createdAt = task.createdAt.parseDate()
     )
 
-    fun toDomain(taskEntity: TaskEntity?): Task? = taskEntity?.let { entity ->
+    fun toDomain(taskEntity: TaskEntity): Task =
         Task(
-            id = entity.id,
-            name = entity.name,
-            description = entity.description,
-            status = entity.status.toDomain(),
-            createdAt = entity.createdAt.formatDate()
+            id = taskEntity.id,
+            name = taskEntity.name,
+            description = taskEntity.description,
+            status = taskEntity.status.toDomain(),
+            createdAt = taskEntity.createdAt.formatDate()
         )
-    }
+
 
     private fun Status.toDbFormat() = when (this) {
         Status.Pending -> "PENDING"

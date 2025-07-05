@@ -1,5 +1,6 @@
 package com.spanishdev.tasklistapp.domain.usecase
 
+import androidx.paging.PagingData
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -11,7 +12,7 @@ class GetTasksUseCase(
     private val repository: TaskRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    operator fun invoke(sorting: TaskRepository.TaskSort): Flow<List<Task>> =
+    operator fun invoke(sorting: TaskRepository.TaskSort): Flow<PagingData<Task>> =
         repository.getTasks(sorting)
             .flowOn(dispatcher)
 }

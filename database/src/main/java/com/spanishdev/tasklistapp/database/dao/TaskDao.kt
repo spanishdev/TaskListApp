@@ -1,24 +1,20 @@
 package com.spanishdev.tasklistapp.database.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.spanishdev.tasklistapp.database.entities.TaskEntity
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskDao {
 
-    @Query("SELECT * FROM tasks ORDER BY createdAt DESC")
-    fun getAllTasks(): Flow<List<TaskEntity>>
-
     @Query("SELECT * FROM tasks ORDER BY createdAt ASC")
-    fun getAllTasksByCreatedAtAsc(): Flow<List<TaskEntity>>
+    fun getAllTasksByCreatedAtAsc(): PagingSource<Int, TaskEntity>
 
     @Query("SELECT * FROM tasks ORDER BY name ASC")
-    fun getAllTasksByName(): Flow<List<TaskEntity>>
+    fun getAllTasksByName(): PagingSource<Int, TaskEntity>
 
     @Query(
         """
@@ -34,7 +30,7 @@ interface TaskDao {
                 createdAt DESC
     """
     )
-    fun getAllTasksByStatus(): Flow<List<TaskEntity>>
+    fun getAllTasksByStatus(): PagingSource<Int, TaskEntity>
 
     @Query("SELECT * FROM tasks WHERE id = :id")
     suspend fun getTaskById(id: Long): TaskEntity?

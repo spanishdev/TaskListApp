@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -38,6 +38,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -61,11 +64,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.itemKey
 import com.spanishdev.tasklistapp.R
 import com.spanishdev.tasklistapp.domain.model.Status
 import com.spanishdev.tasklistapp.domain.model.Task
 import com.spanishdev.tasklistapp.domain.repository.TaskRepository.TaskSort
 import com.spanishdev.tasklistapp.ui.tasklist.TaskListViewModel.Event
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +87,7 @@ fun TaskListScreen(
     val isRefreshingState by viewModel.isRefreshingState.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
     val selectedTaskSort by viewModel.sortingState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var isInSelectableMode by remember { mutableStateOf(false) }
 
@@ -109,6 +118,9 @@ fun TaskListScreen(
                 )
             }
         },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        }
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = isRefreshingState,
@@ -141,6 +153,7 @@ fun TaskListScreen(
                     }
                 },
                 onEditTaskNavigation = onEditTaskNavigation,
+                snackbarHostState = snackbarHostState,
             )
         }
     }
@@ -177,6 +190,7 @@ fun SelectionAppBar(
     )
 }
 
+
 @Composable
 fun Content(
     state: TaskListViewModel.State,
@@ -186,8 +200,9 @@ fun Content(
     onTaskUpdated: (Task) -> Unit,
     onTaskSelected: (Long, Boolean) -> Unit,
     onSelectedModeChange: (Long) -> Unit,
-    modifier: Modifier = Modifier,
     onEditTaskNavigation: (Long) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
@@ -213,26 +228,17 @@ fun Content(
 
 
             is TaskListViewModel.State.Loaded ->
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.tasks) { task ->
-                        TaskItemView(
-                            task = task,
-                            isSelected = state.selected.contains(task.id),
-                            isSelectableMode = isInSelectableMode,
-                            onLongClick = onSelectedModeChange,
-                            onClick = { id, selected ->
-                                if (isInSelectableMode) {
-                                    onTaskSelected(id, selected)
-                                } else {
-                                    onEditTaskNavigation(id)
-                                }
-                            },
-                            onTaskUpdated = { newTask ->
-                                onTaskUpdated(newTask)
-                            }
-                        )
-                    }
-                }
+                TaskListPaginated(
+                    pagingData = state.tasks,
+                    selectedTasks = state.selected,
+                    isInSelectableMode = isInSelectableMode,
+                    onTaskSelected = onTaskSelected,
+                    onSelectedModeChange = onSelectedModeChange,
+                    onEditTaskNavigation = onEditTaskNavigation,
+                    onTaskUpdated = onTaskUpdated,
+                    snackbarHostState = snackbarHostState,
+                    modifier = Modifier.fillMaxSize()
+                )
         }
     }
 }
@@ -321,6 +327,101 @@ fun ErrorView(
     }
 }
 
+
+@Composable
+fun TaskListPaginated(
+    pagingData: Flow<PagingData<Task>>,
+    selectedTasks: Set<Long>,
+    isInSelectableMode: Boolean,
+    onTaskSelected: (Long, Boolean) -> Unit,
+    onSelectedModeChange: (Long) -> Unit,
+    onEditTaskNavigation: (Long) -> Unit,
+    onTaskUpdated: (Task) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+) {
+
+    val lazyPagingItems = pagingData.collectAsLazyPagingItems()
+    val refreshError = lazyPagingItems.loadState.refresh as? LoadState.Error
+    val appendError = lazyPagingItems.loadState.append as? LoadState.Error
+
+    val error = refreshError?.error ?: appendError?.error
+
+    error?.let {
+        LaunchedEffect(it) {
+            snackbarHostState.showSnackbar(
+                message = "Error loading items",
+                actionLabel = "Error",
+                duration = SnackbarDuration.Long,
+                withDismissAction = true
+            )
+        }
+    }
+
+
+    LazyColumn(modifier = modifier) {
+        items(
+            count = lazyPagingItems.itemCount,
+            key = lazyPagingItems.itemKey { it.id }
+        ) { index ->
+            val task = lazyPagingItems[index]
+            if (task != null) {
+                TaskItemView(
+                    task = task,
+                    isSelected = selectedTasks.contains(task.id),
+                    isSelectableMode = isInSelectableMode,
+                    onLongClick = onSelectedModeChange,
+                    onClick = { id, selected ->
+                        if (isInSelectableMode) {
+                            onTaskSelected(id, selected)
+                        } else {
+                            onEditTaskNavigation(id)
+                        }
+                    },
+                    onTaskUpdated = onTaskUpdated
+                )
+            }
+        }
+
+        lazyPagingItems.apply {
+            when {
+                loadState.refresh is LoadState.Loading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+
+                loadState.append is LoadState.Loading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.width(24.dp))
+                        }
+                    }
+                }
+            }
+        }
+
+        if (lazyPagingItems.loadState.refresh is LoadState.NotLoading &&
+            lazyPagingItems.itemCount == 0
+        ) {
+            item {
+                EmptyView(modifier = Modifier.fillMaxSize())
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -527,7 +628,8 @@ fun PreviewContent() {
             createdAt = "19-06-2025 22:00"
         ),
     )
-    val state = TaskListViewModel.State.Loaded(tasks, emptySet())
+    val pagingData = PagingData.from(tasks)
+    val state = TaskListViewModel.State.Loaded(flowOf(pagingData), emptySet())
     Content(
         state = state,
         selectedTaskSort = TaskSort.CREATE_DATE,
@@ -536,6 +638,7 @@ fun PreviewContent() {
         onTaskSelected = { _, _ -> },
         onSelectedModeChange = {},
         onEditTaskNavigation = { },
-        onOrderSelected = { _ -> }
+        onOrderSelected = { _ -> },
+        snackbarHostState = SnackbarHostState(),
     )
 }

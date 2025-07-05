@@ -52,7 +52,11 @@ dependencies {
     //Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.paging)
     ksp(libs.androidx.room.compiler)
+
+    //Paging
+    implementation(libs.androidx.paging.runtime)
 
     //Testing
     testImplementation(libs.junit)
